@@ -290,11 +290,11 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	}
 	
 	// 총알 바운딩 박스
-	for (auto* bullet : bullets) {
-		if (bullet) {
-			bullet->get_bb().drawDebug();
-		}
-	}
+	//for (auto* bullet : bullets) {
+	//	if (bullet) {
+	//		bullet->get_bb().drawDebug();
+	//	}
+	//}
 	
 	glUseProgram(shaderProgramID); // 셰이더 다시 활성화
 
