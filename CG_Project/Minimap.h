@@ -1,8 +1,6 @@
 #pragma once
 #include "pch.h"
 
-class Zombie; 
-
 class Minimap {
 private:
     GLuint VAO, VBO;
@@ -23,6 +21,6 @@ public:
     Minimap(GLuint shader);
     ~Minimap();
 
-    GLvoid render(const glm::vec3& playerPos, const std::vector<Zombie*>& zombies);
+    GLvoid render(const glm::vec3& playerPos);
     GLvoid setWorldSize(float size);
 };

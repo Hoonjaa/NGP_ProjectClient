@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Minimap.h"
-#include "Zombie.h"
 
 Minimap::Minimap(GLuint shader) : shaderProgramID(shader), VAO(0), VBO(0) {
     initBuffers();
@@ -78,7 +77,7 @@ GLvoid Minimap::drawPoint(const glm::vec3& worldPos, const glm::vec3& color, flo
     glDrawArrays(GL_POINTS, 0, 1);
 }
 
-GLvoid Minimap::render(const glm::vec3& playerPos, const std::vector<Zombie*>& zombies) {
+GLvoid Minimap::render(const glm::vec3& playerPos) {
     // 깊이 테스트 비활성화 
     glDisable(GL_DEPTH_TEST);
     
@@ -108,13 +107,6 @@ GLvoid Minimap::render(const glm::vec3& playerPos, const std::vector<Zombie*>& z
     
     // 플레이어 그리기 (파란색)
     drawPoint(playerPos, glm::vec3(0.0f, 0.5f, 1.0f), 10.0f);
-    
-    // 좀비들 그리기 (빨간색)
-    for (auto* zombie : zombies) {
-        if (zombie) {
-            drawPoint(zombie->getPosition(), glm::vec3(1.0f, 0.0f, 0.0f), 8.0f);
-        }
-    }
     
     // 깊이 테스트 다시 활성화
     glEnable(GL_DEPTH_TEST);

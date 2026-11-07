@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Object.h"
-#include "Cube.h"
 
 class Room : public Object
 {
