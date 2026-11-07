@@ -4,7 +4,6 @@
 #include "Bullet.h"
 #include "Room.h"
 #include "Ground.h"
-#include "Minimap.h"
 
 //--- 아래 5개 함수는 사용자 정의 함수임
 void make_vertexShaders();
@@ -66,7 +65,6 @@ Player* player = nullptr;
 Room* room = nullptr;
 Ground* ground = nullptr;
 std::vector<Bullet*> bullets;
-Minimap* minimap = nullptr;
 
 char* filetobuf(const char* file)
 {
@@ -113,8 +111,6 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	player->setup(shaderProgramID);
 	room = new Room();
 	ground = new Ground();
-	minimap = new Minimap(shaderProgramID);
-	minimap->setWorldSize(40.0f);
 
 
 	toggleViewMode(); // 초기 뷰 모드 설정
@@ -271,10 +267,6 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	
 	glUseProgram(shaderProgramID); // 셰이더 다시 활성화
 
-	if (minimap) {
-		minimap->render(player->getPosition());
-	}
-
 	// ============= UI 렌더링 시작 =============
 	// 셰이더 프로그램 비활성화
 	glUseProgram(0);
@@ -329,20 +321,6 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 			}
 		}
 	}
-
-	// 좀비 수 배경 박스
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	glColor4f(0.0f, 0.0f, 0.0f, 0.7f);
-	glBegin(GL_QUADS);
-		glVertex2f(WindowWidth - 160, WindowHeight - 50);
-		glVertex2f(WindowWidth - 10, WindowHeight - 50);
-		glVertex2f(WindowWidth - 10, WindowHeight - 10);
-		glVertex2f(WindowWidth - 160, WindowHeight - 10);
-	glEnd();
-	
-	glDisable(GL_BLEND);
 
 
 	// 깊이 테스트 다시 활성화

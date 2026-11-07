@@ -34,9 +34,6 @@
     <Filter Include="소스 파일\객체\땅">
       <UniqueIdentifier>{58357be8-f607-4cc9-8669-ef8c1120cef2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\객체\미니맵">
-      <UniqueIdentifier>{5bb7848d-e14a-4524-b448-aad35250a4a9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -77,9 +74,6 @@
     </ClCompile>
     <ClCompile Include="Ground.cpp">
       <Filter>소스 파일\객체\땅</Filter>
-    </ClCompile>
-    <ClCompile Include="Minimap.cpp">
-      <Filter>소스 파일\객체\미니맵</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -124,9 +118,6 @@
     </ClInclude>
     <ClInclude Include="Random.h">
       <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Minimap.h">
-      <Filter>소스 파일\객체\미니맵</Filter>
     </ClInclude>
     <ClInclude Include="BoundingBox.h">
       <Filter>헤더 파일</Filter>
