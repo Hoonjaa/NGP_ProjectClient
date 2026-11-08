@@ -17,13 +17,24 @@ void Timer::Update()
 
     previousTime = currentTime;
     cumulativeTime += deltaTime;
+    tpsElapsed += deltaTime;
 
     if (cumulativeTime >= Cycle)
     {
         cumulativeTime -= Cycle;
 
-        if (callback)
+        if (callback) {
             callback();
+            tickCount++;
+        }
+    }
+
+    if (tpsElapsed >= 1.0)
+    {
+        tps = static_cast<int>(tickCount / tpsElapsed);
+
+        tickCount = 0;
+        tpsElapsed = 0.0;
     }
 }
 
@@ -39,4 +50,9 @@ void Timer::SetCycle(double cycle)
         return;
 
     Cycle = 1.0 / cycle;
+}
+
+int Timer::GetTPS() const
+{
+    return tps;
 }

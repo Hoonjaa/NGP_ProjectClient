@@ -635,4 +635,7 @@ GLvoid Logic()
 			}
 		}
 	}
+
+	// 확인용 없애도 된다.
+	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
 }

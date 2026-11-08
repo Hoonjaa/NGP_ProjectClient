@@ -13,11 +13,19 @@ private:
     Clock::time_point previousTime; // 이전 시간
 
     void (*callback)();
+private:
+    // TPS 확인용
+    int tickCount = 0;
+    int tps = 0;
+    double tpsElapsed = 0.0;
+
 public:
     Timer(double cycle, void (*func)());
 
     void Update();
     void Reset();
     void SetCycle(double cycle);
+
+    int GetTPS() const;
 };
 
