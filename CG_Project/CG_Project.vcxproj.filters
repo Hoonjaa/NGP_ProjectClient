@@ -34,6 +34,9 @@
     <Filter Include="소스 파일\객체\땅">
       <UniqueIdentifier>{58357be8-f607-4cc9-8669-ef8c1120cef2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\타이머">
+      <UniqueIdentifier>{2fb3e3b9-0e46-42dd-a10e-fbf577d00ece}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -74,6 +77,9 @@
     </ClCompile>
     <ClCompile Include="Ground.cpp">
       <Filter>소스 파일\객체\땅</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>소스 파일\타이머</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +130,9 @@
     </ClInclude>
     <ClInclude Include="Bullet.h">
       <Filter>소스 파일\객체\총알</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>소스 파일\타이머</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

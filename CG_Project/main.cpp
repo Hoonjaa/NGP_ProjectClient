@@ -4,6 +4,7 @@
 #include "Bullet.h"
 #include "Room.h"
 #include "Ground.h"
+#include "Timer.h"
 
 //--- 아래 5개 함수는 사용자 정의 함수임
 void make_vertexShaders();
@@ -22,6 +23,8 @@ GLvoid PassiveMotion(int x, int y); // 추가: 마우스 버튼을 누르지 않은 상태에서�
 GLvoid Win_to_GL_mouse(int x, int y, GLfloat& gl_x, GLfloat& gl_y);
 // 타이머 함수
 GLvoid TimerFunction(int value);
+GLvoid MainLoop();
+GLvoid Logic();
 
 // --------------여기부터 필요한 함수들 선언하는 구역-------------
 // 뷰 및 투영 변환 행렬
@@ -43,7 +46,7 @@ GLuint fragmentShader;													//--- 프래그먼트 세이더 객체
 // --------------여기부터 필요한 변수들 선언하는 구역-------------
 
 GLint WindowWidth = 800, WindowHeight = 800;
-bool Timer = true; // 타이머 사용중
+//bool Timer = true; // 타이머 사용중
 glm::mat4 Transform_matrix{ 1.0f };
 
 // 플레이어 이동
@@ -57,6 +60,8 @@ int centerX = 410, centerY = 400; // 화면 중앙 좌표
 bool firstMouse = true;
 bool mouseWarped = false; // 마우스가 강제로 이동했는지 체크하는 플래그
 
+// 타이머
+Timer* logicTimer = nullptr;
 
 //Cube* cube = nullptr; 예시임 포인터로 객체 선언
 // 포인터로 하는 이유는 셰이더가 만들어지는 등 기본 세팅 코드가 먼저 작동해야 객체 생성가능
@@ -112,6 +117,9 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	room = new Room();
 	ground = new Ground();
 
+	// 타이머 객체 생성
+	logicTimer = new Timer(60, Logic);
+
 
 	toggleViewMode(); // 초기 뷰 모드 설정
 	glutTimerFunc(16, TimerFunction, 1);
@@ -124,6 +132,7 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 	glutPassiveMotionFunc(PassiveMotion); // 추가: 마우스 버튼을 누르지 않은 상태에서의 움직임 감지
+	glutIdleFunc(MainLoop);
 	glutMainLoop();
 }
 
@@ -520,30 +529,30 @@ GLvoid SpecialKeyboard(int key, int x, int y)
 
 GLvoid TimerFunction(int value)
 {
-	//플레이어
-	if (player) {
-		player->processMovement(key_w, key_a, key_s, key_d);
-		player->reload();
-	}
-	
-	// 총알 업데이트 및 충돌 체크
-	for (int i = bullets.size() - 1; i >= 0; i--) {
-		if (bullets[i]) {
-			bullets[i]->update();
+	////플레이어
+	//if (player) {
+	//	player->processMovement(key_w, key_a, key_s, key_d);
+	//	player->reload();
+	//}
+	//
+	//// 총알 업데이트 및 충돌 체크
+	//for (int i = bullets.size() - 1; i >= 0; i--) {
+	//	if (bullets[i]) {
+	//		bullets[i]->update();
 
-			// 생명주기가 끝난 총알 삭제
-			if (bullets[i]->Destroy()) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-				continue;
-			}
-		}
-	}
-	
-	glutPostRedisplay();
-	if (Timer) {
-		glutTimerFunc(16, TimerFunction, 1);
-	}
+	//		// 생명주기가 끝난 총알 삭제
+	//		if (bullets[i]->Destroy()) {
+	//			delete bullets[i];
+	//			bullets.erase(bullets.begin() + i);
+	//			continue;
+	//		}
+	//	}
+	//}
+	//
+	//glutPostRedisplay();
+	//if (Timer) {
+	//	glutTimerFunc(16, TimerFunction, 1);
+	//}
 }
 
 GLvoid setViewPerspectiveMatrix() {
@@ -595,6 +604,35 @@ GLvoid toggleViewMode() {
 			glutWarpPointer(centerX, centerY);
 			firstMouse = true;
 			mouseWarped = true;
+		}
+	}
+}
+
+GLvoid MainLoop()
+{
+	logicTimer->Update();
+	glutPostRedisplay();
+}
+
+GLvoid Logic()
+{
+	//플레이어
+	if (player) {
+		player->processMovement(key_w, key_a, key_s, key_d);
+		player->reload();
+	}
+
+	// 총알 업데이트 및 충돌 체크
+	for (int i = bullets.size() - 1; i >= 0; i--) {
+		if (bullets[i]) {
+			bullets[i]->update();
+
+			// 생명주기가 끝난 총알 삭제
+			if (bullets[i]->Destroy()) {
+				delete bullets[i];
+				bullets.erase(bullets.begin() + i);
+				continue;
+			}
 		}
 	}
 }
