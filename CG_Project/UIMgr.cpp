@@ -79,12 +79,12 @@ void UIMgr::DrawPlayerHP()
 	glVertex2f(170, 55);
 
 
-	glColor4f(1.0f, 0.0f, 0.0f, 1);
-	glVertex2f(player->HP, 20);
-	glVertex2f(10, 20);
-	glVertex2f(10, 50);
-	glVertex2f(player->HP, 50);
-	glEnd();
+	//glColor4f(1.0f, 0.0f, 0.0f, 1);
+	//glVertex2f(player->HP, 20);
+	//glVertex2f(10, 20);
+	//glVertex2f(10, 50);
+	//glVertex2f(player->HP, 50);
+	//glEnd();
 }
 
 void UIMgr::DrawEnermyHP()
@@ -94,10 +94,48 @@ void UIMgr::DrawEnermyHP()
 
 void UIMgr::DrawChat()
 {
+	constexpr int x = 16;
+	constexpr int lineHeight = 20;
+	int y = 24;
 
+	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	std::size_t count = 0;
+	for (auto it = chatMessages.rbegin(); it != chatMessages.rend() && count < 10; ++it, ++count)
+	{
+		glWindowPos2i(x, y);
+		glutBitmapString(
+			GLUT_BITMAP_HELVETICA_18,
+			reinterpret_cast<const unsigned char*>(it->c_str())
+		);
+		y += lineHeight;
+	}
+
+	glPopAttrib();
 }
 
 void UIMgr::DrawKillLog()
 {
+	constexpr int x = 16;
+	constexpr int lineHeight = 20;
+	int y = 24;
 
+	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+	glDisable(GL_DEPTH_TEST);
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	std::size_t count = 0;
+	for (auto it = killLogMessages.rbegin(); it != killLogMessages.rend() && count < 10; ++it, ++count)
+	{
+		glWindowPos2i(x, y);
+		glutBitmapString(
+			GLUT_BITMAP_HELVETICA_18,
+			reinterpret_cast<const unsigned char*>(it->c_str())
+		);
+		y += lineHeight;
+	}
+
+	glPopAttrib();
 }
