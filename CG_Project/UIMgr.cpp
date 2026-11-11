@@ -149,10 +149,10 @@ void UIMgr::DrawKillLog()
 	std::size_t count = 0;
 	for (auto it = killLogMessages.rbegin(); it != killLogMessages.rend() && count < 10; ++it, ++count)
 	{
-		glWindowPos2i(x- it->size()*2, y);
+		glWindowPos2i(x- it->message.size()*2, y);
 		glutBitmapString(
 			GLUT_BITMAP_HELVETICA_18,
-			reinterpret_cast<const unsigned char*>(it->c_str())
+			reinterpret_cast<const unsigned char*>(it->message.c_str())
 		);
 		y -= lineHeight;
 	}
