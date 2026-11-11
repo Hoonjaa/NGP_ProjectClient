@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "Random.h"
 #include "Player.h"
-#include "Cube.h"
 #include "Bullet.h"
 #include "Room.h"
 #include "Ground.h"
-#include "Zombie.h"
-#include "Minimap.h"
+#include "Timer.h"
 
 //--- 아래 5개 함수는 사용자 정의 함수임
 void make_vertexShaders();
@@ -25,6 +23,8 @@ GLvoid PassiveMotion(int x, int y); // 추가: 마우스 버튼을 누르지 않은 상태에서�
 GLvoid Win_to_GL_mouse(int x, int y, GLfloat& gl_x, GLfloat& gl_y);
 // 타이머 함수
 GLvoid TimerFunction(int value);
+GLvoid MainLoop();
+GLvoid Logic();
 
 // --------------여기부터 필요한 함수들 선언하는 구역-------------
 // 뷰 및 투영 변환 행렬
@@ -33,10 +33,6 @@ glm::mat4 getViewPerspectiveMatrix();
 glm::mat4 getThirdPersonViewMatrix();
 // 변환 행렬 업데이트
 GLvoid updateTransformMatrix();
-// 좀비 생성 함수
-GLvoid spawnZombie();
-// 텍스트 렌더링 함수
-GLvoid renderText(float x, float y, const char* text);
 // 1인칭/3인칭 전환 함수
 GLvoid toggleViewMode();
 
@@ -50,7 +46,7 @@ GLuint fragmentShader;													//--- 프래그먼트 세이더 객체
 // --------------여기부터 필요한 변수들 선언하는 구역-------------
 
 GLint WindowWidth = 800, WindowHeight = 800;
-bool Timer = true; // 타이머 사용중
+//bool Timer = true; // 타이머 사용중
 glm::mat4 Transform_matrix{ 1.0f };
 
 // 플레이어 이동
@@ -64,21 +60,16 @@ int centerX = 410, centerY = 400; // 화면 중앙 좌표
 bool firstMouse = true;
 bool mouseWarped = false; // 마우스가 강제로 이동했는지 체크하는 플래그
 
-// 좀비 생성 관련 변수
-int frameCount = 0;                    // 프레임 카운터
-const int SPAWN_INTERVAL = 180;        // 스폰 간격 (180프레임 = 약 3초, 60fps 기준)
-const int MAX_ZOMBIES = 20;            // 최대 좀비 수
+// 타이머
+Timer* logicTimer = nullptr;
 
 //Cube* cube = nullptr; 예시임 포인터로 객체 선언
 // 포인터로 하는 이유는 셰이더가 만들어지는 등 기본 세팅 코드가 먼저 작동해야 객체 생성가능
 // 따라서 main 함수 안에서 new로 객체 생성
 Player* player = nullptr;
-Cube* cube = nullptr;
 Room* room = nullptr;
 Ground* ground = nullptr;
 std::vector<Bullet*> bullets;
-std::vector<Zombie*> zombies;
-Minimap* minimap = nullptr;
 
 char* filetobuf(const char* file)
 {
@@ -123,11 +114,11 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	// cube = new Cube(); 이런식
 	player = new Player();
 	player->setup(shaderProgramID);
-	cube = new Cube();
 	room = new Room();
 	ground = new Ground();
-	minimap = new Minimap(shaderProgramID);
-	minimap->setWorldSize(40.0f);
+
+	// 타이머 객체 생성
+	logicTimer = new Timer(60, Logic);
 
 
 	toggleViewMode(); // 초기 뷰 모드 설정
@@ -141,6 +132,7 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 	glutPassiveMotionFunc(PassiveMotion); // 추가: 마우스 버튼을 누르지 않은 상태에서의 움직임 감지
+	glutIdleFunc(MainLoop);
 	glutMainLoop();
 }
 
@@ -259,19 +251,12 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 
 	player->render(viewProjectionMatrix);
-	cube->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	room->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
 	for (auto* bullet : bullets) {
 		if (bullet) {
 			bullet->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
-		}
-	}
-
-	for (auto zombie : zombies) {
-		if (zombie) {
-			zombie->render(viewProjectionMatrix);
 		}
 	}
 
@@ -282,13 +267,6 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(glm::value_ptr(viewMatrix));
 	
-	// 좀비 바운딩 박스
-	for (auto zombie : zombies) {
-		if (zombie) {
-			zombie->get_bb().drawDebug();
-		}
-	}
-	
 	// 총알 바운딩 박스
 	//for (auto* bullet : bullets) {
 	//	if (bullet) {
@@ -297,10 +275,6 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	//}
 	
 	glUseProgram(shaderProgramID); // 셰이더 다시 활성화
-
-	if (minimap) {
-		minimap->render(player->getPosition(), zombies);
-	}
 
 	// ============= UI 렌더링 시작 =============
 	// 셰이더 프로그램 비활성화
@@ -357,28 +331,6 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 		}
 	}
 
-	// 좀비 수 배경 박스
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	glColor4f(0.0f, 0.0f, 0.0f, 0.7f);
-	glBegin(GL_QUADS);
-		glVertex2f(WindowWidth - 160, WindowHeight - 50);
-		glVertex2f(WindowWidth - 10, WindowHeight - 50);
-		glVertex2f(WindowWidth - 10, WindowHeight - 10);
-		glVertex2f(WindowWidth - 160, WindowHeight - 10);
-	glEnd();
-	
-	glDisable(GL_BLEND);
-
-	// 좀비 수 표시
-	char zombieText[50];
-	sprintf_s(zombieText, "Zombies: %d / %d", (int)zombies.size(), MAX_ZOMBIES);
-	glColor3f(1.0f, 0.0f, 0.0f); // 빨간색
-	glRasterPos2f(WindowWidth - 150, WindowHeight - 30);
-	for (char* c = zombieText; *c != '\0'; c++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
-	}
 
 	// 깊이 테스트 다시 활성화
 	glEnable(GL_DEPTH_TEST);
@@ -577,74 +529,30 @@ GLvoid SpecialKeyboard(int key, int x, int y)
 
 GLvoid TimerFunction(int value)
 {
-	//좀비
-	// 프레임 카운터 증가
-	frameCount++;
+	////플레이어
+	//if (player) {
+	//	player->processMovement(key_w, key_a, key_s, key_d);
+	//	player->reload();
+	//}
+	//
+	//// 총알 업데이트 및 충돌 체크
+	//for (int i = bullets.size() - 1; i >= 0; i--) {
+	//	if (bullets[i]) {
+	//		bullets[i]->update();
 
-	// 일정 간격마다 새로운 좀비 생성
-	if (frameCount >= SPAWN_INTERVAL) {
-		spawnZombie();
-		frameCount = 0;  // 카운터 리셋
-	}
-
-	// 모든 좀비 업데이트
-	for (auto zombie : zombies) {
-		if (zombie) {
-			zombie->Walk(player->getPosition());
-		}
-	}
-
-	//플레이어
-	if (player) {
-		player->processMovement(key_w, key_a, key_s, key_d);
-		player->reload();
-	}
-	
-	// 총알 업데이트 및 충돌 체크
-	for (int i = bullets.size() - 1; i >= 0; i--) {
-		if (bullets[i]) {
-			bullets[i]->update();
-
-			// 생명주기가 끝난 총알 삭제
-			if (bullets[i]->Destroy()) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-				continue;
-			}
-			
-			// 총알과 좀비의 충돌 체크
-			bool bulletHit = false;
-			BoundingBox bulletBB = bullets[i]->get_bb();
-			
-			for (int j = zombies.size() - 1; j >= 0; j--) {
-				if (zombies[j]) {
-					BoundingBox zombieBB = zombies[j]->get_bb();
-					
-					
-					if (bulletBB.intersects(zombieBB)) {
-						std::cout << "=== 충돌 감지! ===" << std::endl;
-						// 충돌 발생 - 좀비 삭제
-						delete zombies[j];
-						zombies.erase(zombies.begin() + j);
-						bulletHit = true;
-						std::cout << "좀비 처치! 남은 좀비 수: " << zombies.size() << std::endl;
-						break;
-					}
-				}
-			}
-			
-			// 충돌한 총알 삭제
-			if (bulletHit) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-			}
-		}
-	}
-	
-	glutPostRedisplay();
-	if (Timer) {
-		glutTimerFunc(16, TimerFunction, 1);
-	}
+	//		// 생명주기가 끝난 총알 삭제
+	//		if (bullets[i]->Destroy()) {
+	//			delete bullets[i];
+	//			bullets.erase(bullets.begin() + i);
+	//			continue;
+	//		}
+	//	}
+	//}
+	//
+	//glutPostRedisplay();
+	//if (Timer) {
+	//	glutTimerFunc(16, TimerFunction, 1);
+	//}
 }
 
 GLvoid setViewPerspectiveMatrix() {
@@ -687,20 +595,6 @@ glm::mat4 getThirdPersonViewMatrix() {
 	return glm::lookAt(eye, center, up);
 }
 
-GLvoid spawnZombie() {
-	if (zombies.size() >= MAX_ZOMBIES) {
-		return;  // 최대 좀비 수에 도달하면 생성하지 않음
-	}
-
-	glm::vec3 randomPos = getRandomZombieSpawnPosition();
-	Zombie* newZombie = new Zombie(randomPos);
-	newZombie->setup(shaderProgramID);
-	zombies.push_back(newZombie);
-
-	std::cout << "좀비 생성, 위치: (" << randomPos.x << ", " << randomPos.y << ", " << randomPos.z
-		<< "), 현재 좀비 수: " << zombies.size() << std::endl;
-}
-
 GLvoid toggleViewMode() {
 	if (player) {
 		player->toggleViewMode();
@@ -712,4 +606,36 @@ GLvoid toggleViewMode() {
 			mouseWarped = true;
 		}
 	}
+}
+
+GLvoid MainLoop()
+{
+	logicTimer->Update();
+	glutPostRedisplay();
+}
+
+GLvoid Logic()
+{
+	//플레이어
+	if (player) {
+		player->processMovement(key_w, key_a, key_s, key_d);
+		player->reload();
+	}
+
+	// 총알 업데이트 및 충돌 체크
+	for (int i = bullets.size() - 1; i >= 0; i--) {
+		if (bullets[i]) {
+			bullets[i]->update();
+
+			// 생명주기가 끝난 총알 삭제
+			if (bullets[i]->Destroy()) {
+				delete bullets[i];
+				bullets.erase(bullets.begin() + i);
+				continue;
+			}
+		}
+	}
+
+	// 확인용 없애도 된다.
+	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
 }
