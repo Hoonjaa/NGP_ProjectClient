@@ -26,6 +26,18 @@ void UIMgr::Draw()
 	DrawEnermyHP();
 	DrawChat();
 	DrawKillLog();
+
+	// 깊이 테스트 다시 활성화
+	glEnable(GL_DEPTH_TEST);
+
+	// 행렬 복원
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	// 셰이더 프로그램 다시 활성화
+	glUseProgram(*shaderProgramID);
 }
 
 void UIMgr::DrawAmmoCount()
@@ -71,20 +83,28 @@ void UIMgr::DrawAmmoCount()
 
 void UIMgr::DrawPlayerHP()
 {
-	glColor4f(0.0f, 0.0f, 0.0f, 0.7f); // 반투명 검은색 배경
+	if (!player) return;
+
+	constexpr float left = 10.0f;
+	constexpr float right = 170.0f;
+	const float hpRatio = std::min(1.0f,std::max(player->HP / MAX_PLAYER_HP, 0.0f));
+	const float hpRight = left + (right - left) * hpRatio;
+
 	glBegin(GL_QUADS);
-	glVertex2f(170, 15);
-	glVertex2f(10, 15);
-	glVertex2f(10,  55);
-	glVertex2f(170, 55);
 
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glVertex2f(left, 15.0f);
+	glVertex2f(right, 15.0f);
+	glVertex2f(right, 55.0f);
+	glVertex2f(left, 55.0f);
 
-	//glColor4f(1.0f, 0.0f, 0.0f, 1);
-	//glVertex2f(player->HP, 20);
-	//glVertex2f(10, 20);
-	//glVertex2f(10, 50);
-	//glVertex2f(player->HP, 50);
-	//glEnd();
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glVertex2f(left, 20.0f);
+	glVertex2f(hpRight, 20.0f);
+	glVertex2f(hpRight, 50.0f);
+	glVertex2f(left, 50.0f);
+
+	glEnd();
 }
 
 void UIMgr::DrawEnermyHP()
@@ -96,7 +116,7 @@ void UIMgr::DrawChat()
 {
 	constexpr int x = 16;
 	constexpr int lineHeight = 20;
-	int y = 24;
+	int y = 30;
 
 	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -118,9 +138,9 @@ void UIMgr::DrawChat()
 
 void UIMgr::DrawKillLog()
 {
-	constexpr int x = 16;
+	constexpr int x = 800 / 2;
 	constexpr int lineHeight = 20;
-	int y = 24;
+	int y = 600;
 
 	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -129,12 +149,12 @@ void UIMgr::DrawKillLog()
 	std::size_t count = 0;
 	for (auto it = killLogMessages.rbegin(); it != killLogMessages.rend() && count < 10; ++it, ++count)
 	{
-		glWindowPos2i(x, y);
+		glWindowPos2i(x- it->size()*2, y);
 		glutBitmapString(
 			GLUT_BITMAP_HELVETICA_18,
 			reinterpret_cast<const unsigned char*>(it->c_str())
 		);
-		y += lineHeight;
+		y -= lineHeight;
 	}
 
 	glPopAttrib();

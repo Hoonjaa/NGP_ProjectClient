@@ -8,7 +8,7 @@
 #include <vector>
 #include <math.h>
 #include <cmath>
-
+#include <queue>
 #include "include/GL/glew.h"
 #include "include/GL/freeglut.h"
 #include "include/GL/freeglut_ext.h"

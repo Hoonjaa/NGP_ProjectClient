@@ -16,7 +16,6 @@ enum PACKET_TYPE {
 	S2C_REASPAWN,
 	S2C_RELEASEINVINCIBILITY,
 	S2C_OTHERFORWARD,
-	S2C_OTHERFORWARD,
 	S2C_OTHERMOVE,
 	S2C_OTHERBULLET,
 	S2C_OTHERRELOADING,
@@ -93,6 +92,9 @@ struct S2C_OtherForward {	//S2C_OTHERFORWARD
 struct S2C_OtherMove {		//S2C_OTHERMOVE
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;
+	short x;
+	short y;
 };
 
 struct S2C_OtherBullet {	//S2C_OTHERBULLET

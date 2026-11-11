@@ -9,6 +9,8 @@
 #include "Gun_handle.h"
 #include "Gun_magazine.h"
 
+#define MAX_PLAYER_HP 200
+
 class Player
 {
 private:
@@ -29,7 +31,7 @@ public:
 	// 총알 관련 변수
 	GLint bulletCount = 30;
 	bool canFire = true;
-
+	float HP = MAX_PLAYER_HP; // 플레이어 체력
 public:
 	GLvoid setup(GLuint shader);
 	GLvoid render(const glm::mat4& viewProjectionMatrix);
