@@ -102,6 +102,9 @@
     <ClCompile Include="Minimap.cpp">
       <Filter>소스 파일\객체\미니맵</Filter>
     </ClCompile>
+    <ClCompile Include="UIMgr.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -172,6 +175,12 @@
     </ClInclude>
     <ClInclude Include="Bullet.h">
       <Filter>소스 파일\객체\총알</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="UIMgr.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
