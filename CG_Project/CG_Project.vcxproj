@@ -126,7 +126,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="CThread.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Gun_barrel.cpp" />
     <ClCompile Include="Gun_body.cpp" />
@@ -145,7 +144,6 @@
   <ItemGroup>
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Bullet.h" />
-    <ClInclude Include="CThread.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Gun_barrel.h" />
     <ClInclude Include="Gun_body.h" />
