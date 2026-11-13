@@ -133,6 +133,7 @@
     <ClCompile Include="Gun_handle.cpp" />
     <ClCompile Include="Gun_magazine.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetworkClient.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Player_body.cpp" />
@@ -142,8 +143,10 @@
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NetworkClient.h" />
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="Common.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Gun_barrel.h" />
     <ClInclude Include="Gun_body.h" />

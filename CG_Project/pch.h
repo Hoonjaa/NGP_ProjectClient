@@ -1,6 +1,15 @@
 #pragma once
 
 #define _CRT_SECURE_NO_WARNINGS											//--- 프로그램 맨 앞에 선언할 것
+// Winsock2 must precede the Windows headers pulled in by OpenGL.
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include "Common.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>

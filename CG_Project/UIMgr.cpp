@@ -1,6 +1,55 @@
 #include "pch.h"
 #include "UIMgr.h"
 #include "Player.h"
+#include <algorithm>
+
+void UIMgr::BeginChat()
+{
+	isChatting = true;
+	chatInput.clear();
+}
+
+void UIMgr::HandleChatKey(unsigned char key)
+{
+	if (!isChatting) return;
+
+	if (key == 13) {
+		if (chatInput.find_first_not_of(' ') != std::string::npos) {
+			if (!onChatSubmit || !onChatSubmit(chatInput)) return;
+			// The server broadcasts to other clients only, so keep a local echo.
+			AddChatMessage("You: " + chatInput);
+		}
+		chatInput.clear();
+		isChatting = false;
+	}
+	else if (key == 27) {
+		chatInput.clear();
+		isChatting = false;
+	}
+	else if (key == 8) {
+		if (!chatInput.empty()) chatInput.pop_back();
+	}
+	else if (key >= 32 && key <= 126 && chatInput.size() < MAX_CHAT_MSG_LEN - 1) {
+		// GLUT bitmap fonts and keyboard callbacks support printable ASCII here.
+		chatInput.push_back(static_cast<char>(key));
+	}
+}
+
+void UIMgr::AddChatMessage(const std::string& message)
+{
+	if (message.empty()) return;
+	constexpr std::size_t maxHistory = 100;
+	if (chatMessages.size() >= maxHistory) {
+		chatMessages.erase(chatMessages.begin());
+	}
+	chatMessages.push_back(message);
+}
+
+void UIMgr::Resize(GLint width, GLint height)
+{
+	WindowWidth = std::max(1, width);
+	WindowHeight = std::max(1, height);
+}
 
 void UIMgr::Draw()
 {
@@ -114,23 +163,70 @@ void UIMgr::DrawEnermyHP()
 
 void UIMgr::DrawChat()
 {
-	constexpr int x = 16;
+	constexpr int left = 10;
+	constexpr int bottom = 90;
+	constexpr int x = left + 6;
 	constexpr int lineHeight = 20;
-	int y = 30;
+	const int width = std::min(500, WindowWidth - 2 * left);
+	const int visibleLines = std::max(0, std::min(8, (WindowHeight - 160) / lineHeight));
+	if (width < 80 || WindowHeight < 160) return;
+	const int textWidth = width - 12;
+	void* font = GLUT_BITMAP_HELVETICA_18;
 
-	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(0.0f, 0.0f, 0.0f, 0.75f);
+	glBegin(GL_QUADS);
+	glVertex2i(left, bottom);
+	glVertex2i(left + width, bottom);
+	glVertex2i(left + width, bottom + 58 + visibleLines * lineHeight);
+	glVertex2i(left, bottom + 58 + visibleLines * lineHeight);
+	glEnd();
 
-	std::size_t count = 0;
-	for (auto it = chatMessages.rbegin(); it != chatMessages.rend() && count < 10; ++it, ++count)
-	{
+	// Wrap history to the panel width, then show its most recent lines.
+	std::vector<std::string> lines;
+	for (const auto& message : chatMessages) {
+		std::string line;
+		int lineWidth = 0;
+		for (unsigned char c : message) {
+			const int charWidth = glutBitmapWidth(font, c);
+			if (!line.empty() && lineWidth + charWidth > textWidth) {
+				lines.push_back(line);
+				line.clear();
+				lineWidth = 0;
+			}
+			line.push_back(static_cast<char>(c));
+			lineWidth += charWidth;
+		}
+		if (!line.empty()) lines.push_back(line);
+	}
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	int y = bottom + 48;
+	int count = 0;
+	for (auto it = lines.rbegin(); it != lines.rend() && count < visibleLines; ++it, ++count) {
 		glWindowPos2i(x, y);
-		glutBitmapString(
-			GLUT_BITMAP_HELVETICA_18,
-			reinterpret_cast<const unsigned char*>(it->c_str())
-		);
+		glutBitmapString(font, reinterpret_cast<const unsigned char*>(it->c_str()));
 		y += lineHeight;
+	}
+
+	std::string inputLine = isChatting ? "> " + chatInput + "_" : "Enter: chat";
+	// Keep the end of a long input visible while typing.
+	while (inputLine.size() > 3 &&
+		glutBitmapLength(font, reinterpret_cast<const unsigned char*>(inputLine.c_str())) > textWidth) {
+		inputLine.erase(2, 1);
+	}
+	glColor3f(1.0f, 1.0f, 0.4f);
+	glWindowPos2i(x, bottom + 8);
+	glutBitmapString(font, reinterpret_cast<const unsigned char*>(inputLine.c_str()));
+	if (isChatting) {
+		glColor3f(0.8f, 0.8f, 0.8f);
+		glWindowPos2i(x, bottom + 28);
+		glutBitmapString(GLUT_BITMAP_HELVETICA_12,
+			reinterpret_cast<const unsigned char*>("Enter: send | Esc: cancel"));
 	}
 
 	glPopAttrib();

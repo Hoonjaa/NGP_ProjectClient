@@ -27,26 +27,30 @@ enum PACKET_TYPE {
 struct C2S_MoveInfo {	//C2S_MOVEINFO
 	unsigned char size;
 	PACKET_TYPE   type;
-	short player_id;
-	short x;
-	short y;
+	short player_id; // 플레이어 ID
+	float x;		// 플레이어 위치 X
+	float z;		// 플레이어 위치 Z
 };
 
 struct C2S_ShootInfo {	//C2S_SHOOTINFO
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;
+	float x;		// 발사 위치 X
+	float z;		// 발사 위치 Z
 };
 
 struct C2S_ChatInfo {	//C2S_CHATINFO
 	unsigned char size;
 	PACKET_TYPE   type;
-	short player_id;
-	char msg[MAX_CHAT_MSG_LEN];
+	short player_id;		// 플레이어 ID
+	char msg[MAX_CHAT_MSG_LEN]; // 채팅 메시지
 };
 
 struct C2S_ForwardInfo {	//C2S_FORWARDINFO
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;		// 플레이어 ID
 };
 
 struct C2S_Reloading {	//C2S_RELOADING
@@ -57,6 +61,8 @@ struct C2S_Reloading {	//C2S_RELOADING
 struct S2C_Chat {	//S2C_CHAT
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;		// 플레이어 ID
+	char msg[MAX_CHAT_MSG_LEN]; // 채팅 메시지
 };
 
 struct S2C_KillLog {	//S2C_KILLLOG 
@@ -92,9 +98,6 @@ struct S2C_OtherForward {	//S2C_OTHERFORWARD
 struct S2C_OtherMove {		//S2C_OTHERMOVE
 	unsigned char size;
 	PACKET_TYPE   type;
-	short player_id;
-	short x;
-	short y;
 };
 
 struct S2C_OtherBullet {	//S2C_OTHERBULLET
@@ -120,5 +123,5 @@ struct S2C_GameStart {	//S2C_GAMESTART
 struct S2C_GameEnd {	//S2C_GAMEEND
 	unsigned char size;
 	PACKET_TYPE   type;
-};	
+};
 #pragma pack(pop)

@@ -2,6 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetworkClient.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
     <ClCompile Include="Bullet.cpp">
       <Filter>Object\Bullet</Filter>
     </ClCompile>
@@ -46,6 +49,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NetworkClient.h">
+      <Filter>Network</Filter>
+    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header</Filter>
     </ClInclude>
@@ -103,6 +109,9 @@
     <ClInclude Include="Room.h">
       <Filter>Object\Room</Filter>
     </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="vertex.glsl">
@@ -113,6 +122,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Network">
+      <UniqueIdentifier>{c967f245-fe18-439b-a2de-b28c3298bfd5}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Object">
       <UniqueIdentifier>{03247224-60f0-49a0-9d50-ae4f67378312}</UniqueIdentifier>
     </Filter>

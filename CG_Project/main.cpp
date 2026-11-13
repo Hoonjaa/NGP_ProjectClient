@@ -6,6 +6,7 @@
 #include "Ground.h"
 #include "Timer.h"
 #include "UIMgr.h"
+#include "NetworkClient.h"
 
 //--- 아래 5개 함수는 사용자 정의 함수임
 void make_vertexShaders();
@@ -26,6 +27,7 @@ GLvoid Win_to_GL_mouse(int x, int y, GLfloat& gl_x, GLfloat& gl_y);
 GLvoid TimerFunction(int value);
 GLvoid MainLoop();
 GLvoid Logic();
+GLvoid ReportNetworkStatus();
 
 // --------------여기부터 필요한 함수들 선언하는 구역-------------
 // 뷰 및 투영 변환 행렬
@@ -58,6 +60,7 @@ bool key_d = false;
 
 // 플레이어 바라보는 방향 관련 변수
 int centerX = 410, centerY = 400; // 화면 중앙 좌표
+bool chatEnterDown = false; // Ignore Enter auto-repeat across chat mode changes.
 bool firstMouse = true;
 bool mouseWarped = false; // 마우스가 강제로 이동했는지 체크하는 플래그
 
@@ -72,6 +75,8 @@ Room* room = nullptr;
 Ground* ground = nullptr;
 std::vector<Bullet*> bullets;
 UIMgr* uiMgr = nullptr;
+NetworkClient networkClient;
+std::string serverAddress = "127.0.0.1";
 // 스레드 함수 / 변수
 bool ThreadIsCreated = false;
 
@@ -97,11 +102,16 @@ char* filetobuf(const char* file)
 void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 {
 	//--- 윈도우 생성하기
+	serverAddress = argc > 1 ? argv[1] : "127.0.0.1";
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(0, 0);
+	// Fall back to a usable window size if the configured value is zero.
+	if (WindowWidth <= 0) WindowWidth = 800;
+	if (WindowHeight <= 0) WindowHeight = 800;
 	glutInitWindowSize(WindowWidth, WindowHeight);
 	glutCreateWindow("Example1");
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -126,7 +136,28 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	logicTimer = new Timer(60, Logic);
 
 	// UI 매니저 생성
-	uiMgr = new UIMgr(&shaderProgramID, 800, 800, player);
+	uiMgr = new UIMgr(&shaderProgramID, WindowWidth, WindowHeight, player);
+	uiMgr->onChatSubmit = [](const std::string& message) {
+		// TODO: pass the server-assigned player ID once login is implemented.
+		if (networkClient.SendChat(message)) return true;
+		if (networkClient.GetState() != NetworkClient::State::Connected) {
+			uiMgr->AddChatMessage("[Network] Chat not sent: server is not connected.");
+		}
+		else {
+			uiMgr->AddChatMessage("[Network] Chat not queued (error " +
+				std::to_string(networkClient.GetLastError()) + "). Please try again.");
+		}
+		return false;
+	};
+
+	networkClient.onChatReceived = [](short playerId, const std::string& message) {
+		if (uiMgr) {
+			uiMgr->AddChatMessage("Player " + std::to_string(playerId) + ": " + message);
+		}
+	};
+
+	networkClient.Connect(serverAddress.c_str(), PORT);
+	ReportNetworkStatus();
 
 	toggleViewMode(); // 초기 뷰 모드 설정
 	glutTimerFunc(16, TimerFunction, 1);
@@ -141,6 +172,7 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	glutPassiveMotionFunc(PassiveMotion); // 추가: 마우스 버튼을 누르지 않은 상태에서의 움직임 감지
 	glutIdleFunc(MainLoop);
 	glutMainLoop();
+	networkClient.Disconnect();
 }
 
 //--- 버텍스 세이더 객체 만들기
@@ -298,11 +330,14 @@ GLvoid Reshape(int w, int h)											//--- 콜백 함수: 다시 그리기 콜백 함수
 	glViewport(0, 0, w, h);
 	WindowWidth = w;
 	WindowHeight = h;
+	if (uiMgr) uiMgr->Resize(w, h);
 	centerX = w / 2 + 10;
 	centerY = h / 2;
 }
 
 GLvoid Motion(int x, int y) {
+	if (uiMgr && uiMgr->IsChatting()) return;
+
 	// 마우스가 강제로 이동된 경우 무시
 	if (mouseWarped) {
 		mouseWarped = false;
@@ -336,6 +371,8 @@ GLvoid Motion(int x, int y) {
 }
 
 GLvoid PassiveMotion(int x, int y) {
+	if (uiMgr && uiMgr->IsChatting()) return;
+
 	// 마우스가 강제로 이동된 경우 무시
 	if (mouseWarped) {
 		mouseWarped = false;
@@ -367,6 +404,8 @@ GLvoid PassiveMotion(int x, int y) {
 }
 
 GLvoid Mouse(int button, int state, int x, int y) {
+	if (uiMgr && uiMgr->IsChatting()) return;
+
 	GLfloat gl_x, gl_y;
 	Win_to_GL_mouse(x, y, gl_x, gl_y);
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
@@ -398,6 +437,30 @@ GLvoid Win_to_GL_mouse(int x, int y, GLfloat& gl_x, GLfloat& gl_y) {
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+	// Route chat input before gameplay shortcuts, including Q and R.
+	if (key == 13) {
+		if (chatEnterDown) return;
+		chatEnterDown = true;
+	}
+	if (uiMgr && uiMgr->IsChatting()) {
+		uiMgr->HandleChatKey(key);
+		if (!uiMgr->IsChatting() && player && player->isFirstPersonMode()) {
+			glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+			firstMouse = false;
+			mouseWarped = true;
+			glutWarpPointer(centerX, centerY);
+		}
+		glutPostRedisplay();
+		return;
+	}
+	if (key == 13 && uiMgr) {
+		key_w = key_a = key_s = key_d = false;
+		uiMgr->BeginChat();
+		glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+		glutPostRedisplay();
+		return;
+	}
+
 	switch (key) {
 	case 'q':
 		glutLeaveMainLoop();
@@ -448,6 +511,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 }
 
 GLvoid KeyboardUp(unsigned char key, int x, int y) {
+	if (key == 13) chatEnterDown = false;
 	switch (key) {
 	case 'w':
 		key_w = false;
@@ -556,6 +620,9 @@ GLvoid toggleViewMode() {
 
 GLvoid MainLoop()
 {
+	const auto previousState = networkClient.GetState();
+	networkClient.Update();
+	if (networkClient.GetState() != previousState) ReportNetworkStatus();
 	logicTimer->Update();
 	glutPostRedisplay();
 }
@@ -564,7 +631,9 @@ GLvoid Logic()
 {
 	//플레이어
 	if (player) {
-		player->processMovement(key_w, key_a, key_s, key_d);
+		if (!uiMgr || !uiMgr->IsChatting()) {
+			player->processMovement(key_w, key_a, key_s, key_d);
+		}
 		player->reload();
 	}
 
@@ -584,4 +653,25 @@ GLvoid Logic()
 
 	// 확인용 없애도 된다.
 	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
+}
+// Report only connection state changes, rather than printing every frame.
+GLvoid ReportNetworkStatus()
+{
+	std::string message;
+	switch (networkClient.GetState()) {
+	case NetworkClient::State::Connecting:
+		message = "[Network] Connecting to " + serverAddress + ":" + std::to_string(PORT) + "...";
+		break;
+	case NetworkClient::State::Connected:
+		message = "[Network] Connected to " + serverAddress + ":" + std::to_string(PORT);
+		break;
+	case NetworkClient::State::Failed:
+		message = "[Network] Connection failed (Winsock " +
+			std::to_string(networkClient.GetLastError()) + "). Check the server IP and port.";
+		break;
+	default:
+		return;
+	}
+	std::cout << message << std::endl;
+	if (uiMgr) uiMgr->AddChatMessage(message);
 }
