@@ -166,39 +166,50 @@ void NetworkClient::ReceivePackets()
     }
 
     pendingInput.insert(pendingInput.end(), buffer, buffer + received);
+    ProcessPendingPackets();
+}
+
+void NetworkClient::ProcessPendingPackets()
+{
+    // Own the packet bytes locally since a handler can disconnect and clear pendingInput.
+    const auto packets = ExtractCompletePackets();
+    std::size_t offset = 0;
+    while (offset < packets.size() && state == State::Connected) {
+        const std::size_t packetSize = packets[offset];
+        DispatchPacket(packets.data() + offset, packetSize);
+        offset += packetSize;
+    }
+}
+
+std::vector<unsigned char> NetworkClient::ExtractCompletePackets()
+{
     constexpr std::size_t headerSize = sizeof(unsigned char) + sizeof(PACKET_TYPE);
     std::size_t consumed = 0;
-    // Dispatch after parsing so callbacks never run while the input buffer is in use.
-    std::vector<S2C_Chat> chats;
     while (consumed < pendingInput.size()) {
         const std::size_t packetSize = pendingInput[consumed];
         if (packetSize < headerSize) {
             Fail(WSAEINVAL);
-            return;
+            return {};
         }
-        if (pendingInput.size() - consumed < packetSize) break;
-
-        const unsigned char* packet = pendingInput.data() + consumed;
-        std::underlying_type_t<PACKET_TYPE> type{};
-        std::memcpy(&type, packet + sizeof(unsigned char), sizeof(type));
-        if (type == S2C_CHAT) {
-            if (packetSize != sizeof(S2C_Chat)) {
-                Fail(WSAEINVAL);
-                return;
-            }
-            S2C_Chat chat{};
-            std::memcpy(&chat, packet, sizeof(chat));
-            chats.push_back(chat);
-        }
+        if (packetSize > pendingInput.size() - consumed) break;
         consumed += packetSize;
     }
-    pendingInput.erase(pendingInput.begin(), pendingInput.begin() + consumed);
 
-    for (const auto& chat : chats) {
-        const char* end = std::find(chat.msg, chat.msg + MAX_CHAT_MSG_LEN, '\0');
-        const std::string message(chat.msg, end);
-        if (!message.empty() && onChatReceived) onChatReceived(chat.player_id, message);
-        if (state != State::Connected) return;
+    const auto end = pendingInput.begin() + consumed;
+    std::vector<unsigned char> packets(pendingInput.begin(), end);
+    pendingInput.erase(pendingInput.begin(), end);
+    return packets;
+}
+
+void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t packetSize)
+{
+    std::underlying_type_t<PACKET_TYPE> type{};
+    std::memcpy(&type, packet + sizeof(unsigned char), sizeof(type));
+
+    switch (type) {
+    case S2C_CHAT:    S2C_RecvChatInfo(packet, packetSize);        break;
+    default:
+        break;
     }
 }
 
@@ -226,4 +237,70 @@ bool NetworkClient::Fail(int error)
     lastError = error;
     state = State::Failed;
     return false;
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_Chat)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+
+    S2C_Chat chat{};
+    std::memcpy(&chat, packet, sizeof(chat));
+
+    const char* begin = chat.msg;
+    const char* end = std::find(begin, begin + MAX_CHAT_MSG_LEN, '\0');
+    const std::string message(begin, end);
+    if (!message.empty() && onChatReceived) onChatReceived(chat.player_id, message);
+}
+
+//피격 당한 플레이어가 HP정보를 받는 함수
+void NetworkClient::S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//잘못된 이동에 대한 정보를 받는 함수
+void NetworkClient::S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//다른 클라이언트들의 움직임 정보 받는 함수
+void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//다른 클라이언트들이 총을 발사했다는 정보 받는 함수
+void NetworkClient::S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//다른 클라이언트의 생존, 죽음, 무적정보 받는 함수
+void NetworkClient::S2C_RecvPlayerStateInfo(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//다른 플레이어 장전 정보 받는 함수
+void NetworkClient::S2C_RecvOtherReloading(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//플레이어 방향벡터 정보 받는 함수
+void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//게임 시작정보 받는 함수
+void NetworkClient::S2C_GameStart(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//게임 종료 정보 받는 함수
+void NetworkClient::S2C_GameEnd(const unsigned char* packet, std::size_t packetSize)
+{
+}
+
+//누가 어떤 플레이어를 죽였는지에 대한 정보 받는 함수
+void NetworkClient::S2C_RecvKilllog(const unsigned char* packet, std::size_t packetSize)
+{
 }

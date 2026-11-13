@@ -28,6 +28,8 @@ GLvoid TimerFunction(int value);
 GLvoid MainLoop();
 GLvoid Logic();
 GLvoid ReportNetworkStatus();
+// 람다함수 설정
+void SetLambdaFunctions();
 
 // --------------여기부터 필요한 함수들 선언하는 구역-------------
 // 뷰 및 투영 변환 행렬
@@ -137,24 +139,7 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 
 	// UI 매니저 생성
 	uiMgr = new UIMgr(&shaderProgramID, WindowWidth, WindowHeight, player);
-	uiMgr->onChatSubmit = [](const std::string& message) {
-		// TODO: pass the server-assigned player ID once login is implemented.
-		if (networkClient.SendChat(message)) return true;
-		if (networkClient.GetState() != NetworkClient::State::Connected) {
-			uiMgr->AddChatMessage("[Network] Chat not sent: server is not connected.");
-		}
-		else {
-			uiMgr->AddChatMessage("[Network] Chat not queued (error " +
-				std::to_string(networkClient.GetLastError()) + "). Please try again.");
-		}
-		return false;
-	};
-
-	networkClient.onChatReceived = [](short playerId, const std::string& message) {
-		if (uiMgr) {
-			uiMgr->AddChatMessage("Player " + std::to_string(playerId) + ": " + message);
-		}
-	};
+	SetLambdaFunctions();
 
 	networkClient.Connect(serverAddress.c_str(), PORT);
 	ReportNetworkStatus();
@@ -674,4 +659,25 @@ GLvoid ReportNetworkStatus()
 	}
 	std::cout << message << std::endl;
 	if (uiMgr) uiMgr->AddChatMessage(message);
+}
+void SetLambdaFunctions()
+{
+	uiMgr->onChatSubmit = [](const std::string& message) {
+		// TODO: pass the server-assigned player ID once login is implemented.
+		if (networkClient.SendChat(message)) return true;
+		if (networkClient.GetState() != NetworkClient::State::Connected) {
+			uiMgr->AddChatMessage("[Network] Chat not sent: server is not connected.");
+		}
+		else {
+			uiMgr->AddChatMessage("[Network] Chat not queued (error " +
+				std::to_string(networkClient.GetLastError()) + "). Please try again.");
+		}
+		return false;
+	};
+
+	networkClient.onChatReceived = [](short playerId, const std::string& message) {
+		if (uiMgr) {
+			uiMgr->AddChatMessage("Player " + std::to_string(playerId) + ": " + message);
+		}
+	};
 }

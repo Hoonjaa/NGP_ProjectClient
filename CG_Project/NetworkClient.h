@@ -37,6 +37,10 @@ private:
     void FlushSendQueue();
     void ReceivePackets();
 
+    void ProcessPendingPackets();
+    std::vector<unsigned char> ExtractCompletePackets();
+    void DispatchPacket(const unsigned char* packet, std::size_t packetSize);
+    
     static constexpr std::size_t maxPendingChats = 64;
     std::deque<C2S_ChatInfo> outgoingChats;
     std::size_t sendOffset = 0;
@@ -47,4 +51,17 @@ private:
     State state = State::Disconnected;
     int lastError = 0;
     std::chrono::steady_clock::time_point connectStarted;
+
+private:
+    void S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize);
+    void S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize); //피격 당한 플레이어가 HP정보를 받는 함수
+    void S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize); //잘못된 이동에 대한 정보를 받는 함수
+    void S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들의 움직임 정보 받는 함수
+    void S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
+    void S2C_RecvPlayerStateInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트의 생존, 죽음, 무적정보 받는 함수
+    void S2C_RecvOtherReloading(const unsigned char* packet, std::size_t packetSize); //다른 플레이어 장전 정보 받는 함수
+    void S2C_RecvForward(const unsigned char* packet, std::size_t packetSize); //플레이어 방향벡터 정보 받는 함수
+    void S2C_GameStart(const unsigned char* packet, std::size_t packetSize); //게임 시작정보 받는 함수
+    void S2C_GameEnd(const unsigned char* packet, std::size_t packetSize); //게임 종료 정보 받는 함수
+    void S2C_RecvKilllog(const unsigned char* packet, std::size_t packetSize); //누가 어떤 플레이어를 죽였는지에 대한 정보 받는 함수
 };
