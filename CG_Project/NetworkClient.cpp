@@ -207,7 +207,19 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
     std::memcpy(&type, packet + sizeof(unsigned char), sizeof(type));
 
     switch (type) {
-    case S2C_CHAT:    S2C_RecvChatInfo(packet, packetSize);        break;
+    case S2C_CHAT:                  S2C_RecvChatInfo(packet, packetSize);           break;
+    case S2C_KILLLOG:               S2C_RecvKilllog(packet, packetSize);            break;
+    case S2C_HITINFO:               S2C_RecvPlayerHPInfo(packet,packetSize);        break;
+	case S2C_DEATH:                 S2C_RecvPlayerStateInfo(packet, packetSize);    break;
+	case S2C_REASPAWN:              S2C_RecvPlayerStateInfo(packet, packetSize);    break;
+	case S2C_RELEASEINVINCIBILITY:  S2C_RecvPlayerStateInfo(packet, packetSize);    break;
+	case S2C_OTHERFORWARD:          S2C_RecvForward(packet, packetSize);            break;
+    case S2C_OTHERMOVE:             S2C_RecvPlayerMoveInfo(packet, packetSize);     break;
+    case S2C_OTHERBULLET:           S2C_RecvBulletInfo(packet, packetSize);         break;
+    case S2C_OTHERRELOADING:        S2C_RecvOtherReloading(packet, packetSize);     break;
+    case S2C_CANTMOVE:              S2C_RecvWrongWayInfo(packet, packetSize);       break;
+    case S2C_GAMESTART:             S2C_GameStart(packet, packetSize);              break;
+    case S2C_GAMEEND:               S2C_GameEnd(packet,packetSize);                 break;
     default:
         break;
     }
