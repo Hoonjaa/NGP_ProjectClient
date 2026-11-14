@@ -134,8 +134,10 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	player->setup(shaderProgramID);
 	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[0]->setup(shaderProgramID);
+	otherPlayer[0]->SetPosition(glm::vec3(2.0f, 1.0f, 2.0f)); // 임시로 위치 설정
 	otherPlayer[1] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[1]->setup(shaderProgramID);
+	otherPlayer[1]->SetPosition(glm::vec3(-2.0f, 1.0f, -2.0f)); // 임시로 위치 설정
 
 	room = new Room();
 	ground = new Ground();
@@ -622,6 +624,7 @@ GLvoid Logic()
 	if (player) {
 		if (!uiMgr || !uiMgr->IsChatting()) {
 			player->processMovement(key_w, key_a, key_s, key_d);
+			networkClient.C2S_SendMoveInfo(player->getPosition());
 		}
 		player->reload();
 	}
@@ -668,7 +671,7 @@ void SetLambdaFunctions()
 {
 	uiMgr->onChatSubmit = [](const std::string& message) {
 		// TODO: pass the server-assigned player ID once login is implemented.
-		if (networkClient.SendChat(message)) return true;
+		if (networkClient.C2S_SendChatInfo(message)) return true;
 		if (networkClient.GetState() != NetworkClient::State::Connected) {
 			uiMgr->AddChatMessage("[Network] Chat not sent: server is not connected.");
 		}
@@ -687,11 +690,13 @@ void SetLambdaFunctions()
 
 	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float y)
 	{
-			for (auto p : otherPlayer) {
-				if (p && p->playerID == playerId) {
-					p->SetPosition(glm::vec3(x, 0.0f, y));
-					return;
-				}
-			}
+			//for (auto p : otherPlayer) {
+			//	if (p && p->playerID == playerId) {
+			//		p->SetPosition(glm::vec3(x, p->getPosition().y, y));
+			//		return;
+			//	}
+			//}
+			otherPlayer[0]->SetPosition(glm::vec3(x, otherPlayer[0]->getPosition().y, y));
+			return;
 	};
 }

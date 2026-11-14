@@ -224,7 +224,7 @@ bool NetworkClient::Fail(int error)
     return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-bool NetworkClient::SendChat(const std::string& message, short playerId)
+bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
 {
     if (state != State::Connected) {
         lastError = WSAENOTCONN;
@@ -255,9 +255,29 @@ bool NetworkClient::SendChat(const std::string& message, short playerId)
     return true;
 }
 
+bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
+{
+    if (state != State::Connected) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+    C2S_MoveInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_MOVEINFO;
+    packet.player_id = playerId;
+    packet.x = Pos.x;
+    packet.z = Pos.z;
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+    outgoing.push(responsepacket);
+    lastError = 0;
+    return true;
+}
+
 
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
 {
+	std::cout << "S2C_RecvChatInfo" << std::endl;
     if (packetSize != sizeof(S2C_Chat)) {
         Fail(WSAEINVAL);
         return;
@@ -285,6 +305,7 @@ void NetworkClient::S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_
 //다른 클라이언트들의 움직임 정보 받는 함수
 void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    std::cout << "S2C_RecvPlayerMoveInfo" << std::endl;
     if (packetSize != sizeof(S2C_OtherMove)) {
         Fail(WSAEINVAL);
         return;

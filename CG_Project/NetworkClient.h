@@ -31,7 +31,8 @@ public:
 
 public:
     // true means queued, not acknowledged by the server. -1 means ID not assigned yet.
-    bool SendChat(const std::string& message, short playerId = -1);
+    bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
+    bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
     // Invoked by Update on the GLUT thread when a complete S2C_CHAT arrives.
 
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
