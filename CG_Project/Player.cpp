@@ -196,8 +196,8 @@ GLvoid Player::processMovement(bool w_pressed, bool a_pressed, bool s_pressed, b
 			glm::vec3 newPos = getPosition();
 			
 			// 범위 제한: x, z는 -19 ~ 19
-			const float MIN_BOUNDARY = -19.0f;
-			const float MAX_BOUNDARY = 19.0f;
+			const float MIN_BOUNDARY = -25.0f;
+			const float MAX_BOUNDARY = 25.0f;
 			
 			// 범위를 벗어났는지 확인
 			bool outOfBounds = false;
