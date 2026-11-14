@@ -38,6 +38,7 @@ public:
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
 
+    std::queue<std::vector<unsigned char>> outgoing;
 private:
     bool Fail(int error);
     void FlushSendQueue();
@@ -48,7 +49,6 @@ private:
     void DispatchPacket(const unsigned char* packet, std::size_t packetSize);
     
     static constexpr std::size_t maxPendingChats = 64;
-    std::deque<C2S_ChatInfo> outgoingChats;
     std::size_t sendOffset = 0;
     std::vector<unsigned char> pendingInput;
 

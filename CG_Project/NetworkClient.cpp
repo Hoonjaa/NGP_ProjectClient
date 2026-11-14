@@ -96,42 +96,15 @@ void NetworkClient::Update()
     }
 }
 
-bool NetworkClient::SendChat(const std::string& message, short playerId)
-{
-    if (state != State::Connected) {
-        lastError = WSAENOTCONN;
-        return false;
-    }
-    if (message.empty() || message.find_first_not_of(' ') == std::string::npos ||
-        message.size() >= MAX_CHAT_MSG_LEN || message.find('\0') != std::string::npos) {
-        lastError = WSAEINVAL;
-        return false;
-    }
-    if (outgoingChats.size() >= maxPendingChats) {
-        lastError = WSAENOBUFS;
-        return false;
-    }
-
-    C2S_ChatInfo packet{};
-    packet.size = static_cast<unsigned char>(sizeof(packet));
-    packet.type = C2S_CHATINFO;
-    packet.player_id = playerId;
-    // Zero initialization leaves a terminator and clears unused packet bytes.
-    std::memcpy(packet.msg, message.data(), message.size());
-    outgoingChats.push_back(packet);
-    lastError = 0;
-    return true;
-}
-
 void NetworkClient::FlushSendQueue()
 {
-    if (outgoingChats.empty()) return;
+    if (outgoing.empty()) return;
 
     // One attempt per Update keeps rendering responsive even with a full queue.
-    const auto& packet = outgoingChats.front();
+    const auto& packet = outgoing.front();
     const int written = send(serverSocket,
-        reinterpret_cast<const char*>(&packet) + sendOffset,
-        static_cast<int>(sizeof(packet) - sendOffset), 0);
+        reinterpret_cast<const char*>(packet.data()) + sendOffset,
+        static_cast<int>(packet.size() - sendOffset), 0);
     if (written == SOCKET_ERROR) {
         const int error = WSAGetLastError();
         if (error != WSAEWOULDBLOCK) Fail(error);
@@ -143,8 +116,8 @@ void NetworkClient::FlushSendQueue()
     }
 
     sendOffset += static_cast<std::size_t>(written);
-    if (sendOffset == sizeof(packet)) {
-        outgoingChats.pop_front();
+    if (sendOffset == packet.size()) {
+        outgoing.pop();
         sendOffset = 0;
     }
 }
@@ -227,7 +200,7 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
 
 void NetworkClient::Disconnect()
 {
-    outgoingChats.clear();
+    outgoing = {};
     sendOffset = 0;
     pendingInput.clear();
     if (serverSocket != INVALID_SOCKET) {
@@ -251,6 +224,38 @@ bool NetworkClient::Fail(int error)
     return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
+bool NetworkClient::SendChat(const std::string& message, short playerId)
+{
+    if (state != State::Connected) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+    if (message.empty() || message.find_first_not_of(' ') == std::string::npos ||
+        message.size() >= MAX_CHAT_MSG_LEN || message.find('\0') != std::string::npos) {
+        lastError = WSAEINVAL;
+        return false;
+    }
+    if (outgoing.size() >= maxPendingChats) {
+        lastError = WSAENOBUFS;
+        return false;
+    }
+
+    C2S_ChatInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_CHATINFO;
+    packet.player_id = playerId;
+    // Zero initialization leaves a terminator and clears unused packet bytes.
+    std::memcpy(packet.msg, message.data(), message.size());
+
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+
+    outgoing.push(responsepacket);
+    lastError = 0;
+    return true;
+}
+
+
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
 {
     if (packetSize != sizeof(S2C_Chat)) {
