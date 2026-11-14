@@ -2,10 +2,10 @@
 #include "Random.h"
 #include "Player.h"
 #include "Bullet.h"
-#include "Room.h"
 #include "Ground.h"
 #include "Timer.h"
 #include "UIMgr.h"
+#include "Obstacle.h"
 
 //--- 아래 5개 함수는 사용자 정의 함수임
 void make_vertexShaders();
@@ -68,8 +68,8 @@ Timer* logicTimer = nullptr;
 // 포인터로 하는 이유는 셰이더가 만들어지는 등 기본 세팅 코드가 먼저 작동해야 객체 생성가능
 // 따라서 main 함수 안에서 new로 객체 생성
 Player* player = nullptr;
-Room* room = nullptr;
 Ground* ground = nullptr;
+Obstacle* obstacle = nullptr;
 std::vector<Bullet*> bullets;
 UIMgr* uiMgr = nullptr;
 // 스레드 함수 / 변수
@@ -119,8 +119,8 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	// cube = new Cube(); 이런식
 	player = new Player();
 	player->setup(shaderProgramID);
-	room = new Room();
 	ground = new Ground();
+	obstacle = new Obstacle();
 
 	// 타이머 객체 생성
 	logicTimer = new Timer(60, Logic);
@@ -258,8 +258,8 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 
 	player->render(viewProjectionMatrix);
-	room->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
+	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
 	for (auto* bullet : bullets) {
 		if (bullet) {
