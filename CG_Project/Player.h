@@ -32,12 +32,15 @@ public:
 	GLint bulletCount = 30;
 	bool canFire = true;
 	float HP = MAX_PLAYER_HP; // 플레이어 체력
+	short playerID = -1; // 플레이어 ID
 public:
 	GLvoid setup(GLuint shader);
 	GLvoid render(const glm::mat4& viewProjectionMatrix);
 	// 이동 관련 함수
 	GLvoid processMovement(bool w_pressed, bool a_pressed, bool s_pressed, bool d_pressed);
 	glm::vec3 getPosition() const;
+	void SetPosition(const glm::vec3& pos);
+
 	// 총알 관련 변수
 	glm::vec3 getFireDirection() const; //총알 발사 방향
 	glm::vec3 getRightDirection() const; // 플레이어 오른쪽 방향

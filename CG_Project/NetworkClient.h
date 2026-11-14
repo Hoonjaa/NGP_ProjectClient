@@ -21,16 +21,22 @@ public:
 
     // true means the attempt started (or already completed); inspect GetState.
     bool Connect(const char* serverIPv4, unsigned short port);
-    // true means queued, not acknowledged by the server. -1 means ID not assigned yet.
-    bool SendChat(const std::string& message, short playerId = -1);
-    // Invoked by Update on the GLUT thread when a complete S2C_CHAT arrives.
-    std::function<void(short, const std::string&)> onChatReceived;
+
     void Update();
     void Disconnect();
 
     State GetState() const { return state; }
     int GetLastError() const { return lastError; }
     SOCKET GetSocket() const { return serverSocket; }
+
+public:
+    // true means queued, not acknowledged by the server. -1 means ID not assigned yet.
+    bool SendChat(const std::string& message, short playerId = -1);
+    // Invoked by Update on the GLUT thread when a complete S2C_CHAT arrives.
+
+    // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
+    std::function<void(short, const std::string&)> onChatReceived;
+    std::function<void(short, const float x, const float y)> onOtherMoveReceived;
 
 private:
     bool Fail(int error);

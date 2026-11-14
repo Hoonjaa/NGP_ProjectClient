@@ -239,6 +239,16 @@ glm::vec3 Player::getPosition() const
 	return glm::vec3(0.0f);
 }
 
+void Player::SetPosition(const glm::vec3& pos)
+{
+	if (player_body) {
+		// 현재 위치를 가져와서 이동할 벡터 계산
+		glm::vec3 currentPos = getPosition();
+		glm::vec3 translation = pos - currentPos;
+		root->translate(translation);
+	}
+}
+
 GLvoid Player::handleMouseMovement(float deltaX, float deltaY)
 {
 	if (player_body && player_body->getObject()) {

@@ -280,6 +280,14 @@ void NetworkClient::S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_
 //다른 클라이언트들의 움직임 정보 받는 함수
 void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    if (packetSize != sizeof(S2C_OtherMove)) {
+        Fail(WSAEINVAL);
+        return;
+	}
+
+    S2C_OtherMove move;
+	std::memcpy(&move, packet, sizeof(move));
+	onOtherMoveReceived(move.player_id, move.x, move.z);
 }
 
 //다른 클라이언트들이 총을 발사했다는 정보 받는 함수

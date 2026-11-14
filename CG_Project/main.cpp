@@ -73,6 +73,7 @@ Timer* logicTimer = nullptr;
 // 포인터로 하는 이유는 셰이더가 만들어지는 등 기본 세팅 코드가 먼저 작동해야 객체 생성가능
 // 따라서 main 함수 안에서 new로 객체 생성
 Player* player = nullptr;
+Player* otherPlayer[2] = { nullptr }; // 다른 플레이어 객체
 Room* room = nullptr;
 Ground* ground = nullptr;
 std::vector<Bullet*> bullets;
@@ -131,6 +132,11 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	// cube = new Cube(); 이런식
 	player = new Player();
 	player->setup(shaderProgramID);
+	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
+	otherPlayer[0]->setup(shaderProgramID);
+	otherPlayer[1] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
+	otherPlayer[1]->setup(shaderProgramID);
+
 	room = new Room();
 	ground = new Ground();
 
@@ -257,13 +263,9 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 viewMatrix;
 	glm::vec3 viewPos;
 
-	if (player && player->isFirstPersonMode()) {
+	if (player) {
 		viewMatrix = player->getFirstPersonViewMatrix();
 		viewPos = player->getPosition() + glm::vec3(0.0f, 0.7f, 0.0f); // 카메라 위치 (조명용임 실제로 바꾸는건 Player_body로)
-	}
-	else {
-		viewMatrix = getThirdPersonViewMatrix();
-		viewPos = glm::vec3(0.0f, 10.0f, 20.0f);
 	}
 
 	// viewPos uniform 설정
@@ -275,6 +277,8 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 
 	player->render(viewProjectionMatrix);
+	otherPlayer[0]->render(viewProjectionMatrix);
+	otherPlayer[1]->render(viewProjectionMatrix);
 	room->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
@@ -679,5 +683,15 @@ void SetLambdaFunctions()
 		if (uiMgr) {
 			uiMgr->AddChatMessage("Player " + std::to_string(playerId) + ": " + message);
 		}
+	};
+
+	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float y)
+	{
+			for (auto p : otherPlayer) {
+				if (p && p->playerID == playerId) {
+					p->SetPosition(glm::vec3(x, 0.0f, y));
+					return;
+				}
+			}
 	};
 }
