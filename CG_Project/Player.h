@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include <string>
 #include "TreeNode.h"
 #include "Object_part.h"
 #include "Player_body.h"
@@ -21,7 +22,7 @@ private:
 	std::shared_ptr<Object_Part> gun_barrel;
 	std::shared_ptr<Object_Part> gun_handle;
 	std::shared_ptr<Object_Part> gun_magazine;
-	bool firstPersonMode; // 1인칭/3인칭 모드 전환용
+	bool firstPersonMode = false; // 1인칭/3인칭 모드 전환용
 
 	// 총 회전 업데이트를 위한 private 메서드
 	GLvoid updateGunRotation();
@@ -32,6 +33,7 @@ public:
 	GLint bulletCount = 30;
 	bool canFire = true;
 	float HP = MAX_PLAYER_HP; // 플레이어 체력
+	std::string playerName;
 	short playerID = -1; // 플레이어 ID
 
 public:

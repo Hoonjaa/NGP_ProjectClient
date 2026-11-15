@@ -55,6 +55,10 @@ void NetworkClient::Update()
     if (state == State::Connected) {
         FlushSendQueue();
         if (state == State::Connected) ReceivePackets();
+        if (state == State::Connected && loginRequested && !IsLoggedIn() &&
+            std::chrono::steady_clock::now() - loginStarted >= std::chrono::seconds(5)) {
+            Fail(WSAETIMEDOUT);
+        }
         return;
     }
     if (state != State::Connecting) return;
@@ -180,6 +184,8 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
     std::memcpy(&type, packet + sizeof(unsigned char), sizeof(type));
 
     switch (type) {
+    case S2C_LOGINRESULT:           S2C_RecvLoginResult(packet, packetSize);        break;
+    case S2C_OTHERLOGIN:            S2C_RecvOtherLogin(packet, packetSize);         break;
     case S2C_CHAT:                  S2C_RecvChatInfo(packet, packetSize);           break;
     case S2C_KILLLOG:               S2C_RecvKilllog(packet, packetSize);            break;
     case S2C_HITINFO:               S2C_RecvPlayerHPInfo(packet,packetSize);        break;
@@ -203,6 +209,8 @@ void NetworkClient::Disconnect()
     outgoing = {};
     sendOffset = 0;
     pendingInput.clear();
+    localPlayerId = -1;
+    loginRequested = false;
     if (serverSocket != INVALID_SOCKET) {
         if (state == State::Connected) shutdown(serverSocket, SD_BOTH);
         closesocket(serverSocket);
@@ -224,10 +232,47 @@ bool NetworkClient::Fail(int error)
     return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
+bool NetworkClient::IsValidPlayerName(const std::string& name)
+{
+    if (name.empty() || name.size() >= sizeof(C2S_Login{}.name) ||
+        name.find_first_not_of(' ') == std::string::npos) return false;
+    return std::all_of(name.begin(), name.end(), [](unsigned char c) {
+        return c >= 32 && c <= 126;
+    });
+}
+
+bool NetworkClient::C2S_SendLoginInfo(const std::string& name)
 {
     if (state != State::Connected) {
         lastError = WSAENOTCONN;
+        return false;
+    }
+    if (loginRequested || !IsValidPlayerName(name)) {
+        lastError = WSAEINVAL;
+        return false;
+    }
+
+    C2S_Login packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_LOGIN;
+    std::memcpy(packet.name, name.data(), name.size());
+    std::vector<unsigned char> bytes(sizeof(packet));
+    std::memcpy(bytes.data(), &packet, sizeof(packet));
+    outgoing.push(bytes);
+    loginRequested = true;
+    loginStarted = std::chrono::steady_clock::now();
+    lastError = 0;
+    return true;
+}
+
+bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
+{
+    if (!IsLoggedIn()) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+    if (playerId >= 0 && playerId != localPlayerId) {
+        lastError = WSAEINVAL;
         return false;
     }
     if (message.empty() || message.find_first_not_of(' ') == std::string::npos ||
@@ -243,7 +288,7 @@ bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
     C2S_ChatInfo packet{};
     packet.size = static_cast<unsigned char>(sizeof(packet));
     packet.type = C2S_CHATINFO;
-    packet.player_id = playerId;
+    packet.player_id = localPlayerId;
     // Zero initialization leaves a terminator and clears unused packet bytes.
     std::memcpy(packet.msg, message.data(), message.size());
 
@@ -257,14 +302,18 @@ bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
 
 bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
 {
-    if (state != State::Connected) {
+    if (!IsLoggedIn()) {
         lastError = WSAENOTCONN;
+        return false;
+    }
+    if (playerId >= 0 && playerId != localPlayerId) {
+        lastError = WSAEINVAL;
         return false;
     }
     C2S_MoveInfo packet{};
     packet.size = static_cast<unsigned char>(sizeof(packet));
     packet.type = C2S_MOVEINFO;
-    packet.player_id = playerId;
+    packet.player_id = localPlayerId;
     packet.x = Pos.x;
     packet.z = Pos.z;
     std::vector<unsigned char> responsepacket(sizeof(packet));
@@ -274,6 +323,39 @@ bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
     return true;
 }
 
+
+void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_LoginResult) || !loginRequested || IsLoggedIn()) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_LoginResult result{};
+    std::memcpy(&result, packet, sizeof(result));
+    if (result.player_id < 0 || result.player_id >= 3) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    localPlayerId = result.player_id;
+    if (onLoginResult) onLoginResult(localPlayerId);
+}
+
+void NetworkClient::S2C_RecvOtherLogin(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_OtherLogin) || !IsLoggedIn()) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_OtherLogin other{};
+    std::memcpy(&other, packet, sizeof(other));
+    if (other.player_id < 0 || other.player_id >= 3 || other.player_id == localPlayerId) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    const char* begin = other.name;
+    const char* end = std::find(begin, begin + sizeof(other.name), '\0');
+    if (onOtherLogin) onOtherLogin(other.player_id, std::string(begin, end));
+}
 
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
 {
@@ -313,7 +395,7 @@ void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::siz
 
     S2C_OtherMove move;
 	std::memcpy(&move, packet, sizeof(move));
-	onOtherMoveReceived(move.player_id, move.x, move.z);
+	if (IsLoggedIn() && onOtherMoveReceived) onOtherMoveReceived(move.player_id, move.x, move.y);
 }
 
 //다른 클라이언트들이 총을 발사했다는 정보 받는 함수

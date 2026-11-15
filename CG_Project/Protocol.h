@@ -3,12 +3,15 @@ constexpr short PORT = 9500;
 constexpr int MAX_CHAT_MSG_LEN = 200;
 
 enum PACKET_TYPE {
+	C2S_LOGIN,
 	C2S_MOVEINFO,
 	C2S_SHOOTINFO,
 	C2S_CHATINFO,
 	C2S_FORWARDINFO,
 	C2S_RELOADING,
 
+	S2C_LOGINRESULT,
+	S2C_OTHERLOGIN,
 	S2C_CHAT,
 	S2C_KILLLOG,
 	S2C_HITINFO,
@@ -24,6 +27,12 @@ enum PACKET_TYPE {
 	S2C_GAMEEND
 };
 #pragma pack(push, 1) 
+struct C2S_Login {	//C2S_LOGIN
+	unsigned char size;
+	PACKET_TYPE   type;
+	char name[10];	// 플레이어 이름
+};
+
 struct C2S_MoveInfo {	//C2S_MOVEINFO
 	unsigned char size;
 	PACKET_TYPE   type;
@@ -56,6 +65,19 @@ struct C2S_ForwardInfo {	//C2S_FORWARDINFO
 struct C2S_Reloading {	//C2S_RELOADING
 	unsigned char size;
 	PACKET_TYPE   type;
+};
+
+struct S2C_LoginResult {	//S2C_LOGINRESULT
+	unsigned char size;
+	PACKET_TYPE   type;
+	short player_id;		// 플레이어 ID
+};
+
+struct S2C_OtherLogin {	//S2C_OTHERLOGIN
+	unsigned char size;
+	PACKET_TYPE   type;
+	short player_id;		// 플레이어 ID
+	char name[10];	// 플레이어 이름
 };
 
 struct S2C_Chat {	//S2C_CHAT
@@ -98,9 +120,9 @@ struct S2C_OtherForward {	//S2C_OTHERFORWARD
 struct S2C_OtherMove {		//S2C_OTHERMOVE
 	unsigned char size;
 	PACKET_TYPE   type;
-	short player_id;
-	float x;
-	float z;
+	short player_id;		// 플레이어 ID
+	float x;				// 플레이어 위치 X
+	float y;				// 플레이어 위치 Y
 };
 
 struct S2C_OtherBullet {	//S2C_OTHERBULLET
