@@ -28,14 +28,20 @@ public:
     State GetState() const { return state; }
     int GetLastError() const { return lastError; }
     SOCKET GetSocket() const { return serverSocket; }
+    bool IsLoggedIn() const { return state == State::Connected && localPlayerId >= 0; }
+    short GetPlayerId() const { return localPlayerId; }
+    static bool IsValidPlayerName(const std::string& name);
 
 public:
-    // true means queued, not acknowledged by the server. -1 means ID not assigned yet.
+    // true means queued; gameplay requires a successful login response.
+    bool C2S_SendLoginInfo(const std::string& name);
     bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
     bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
     // Invoked by Update on the GLUT thread when a complete S2C_CHAT arrives.
 
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
+    std::function<void(short)> onLoginResult;
+    std::function<void(short, const std::string&)> onOtherLogin;
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
 
@@ -57,9 +63,14 @@ private:
     bool winsockStarted = false;
     State state = State::Disconnected;
     int lastError = 0;
+    short localPlayerId = -1;
+    bool loginRequested = false;
+    std::chrono::steady_clock::time_point loginStarted;
     std::chrono::steady_clock::time_point connectStarted;
 
 private:
+    void S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize);
+    void S2C_RecvOtherLogin(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize); //피격 당한 플레이어가 HP정보를 받는 함수
     void S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize); //잘못된 이동에 대한 정보를 받는 함수

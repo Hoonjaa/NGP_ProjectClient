@@ -80,6 +80,7 @@ std::vector<Bullet*> bullets;
 UIMgr* uiMgr = nullptr;
 NetworkClient networkClient;
 std::string serverAddress = "127.0.0.1";
+std::string loginName;
 // 스레드 함수 / 변수
 bool ThreadIsCreated = false;
 
@@ -106,6 +107,12 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 {
 	//--- 윈도우 생성하기
 	serverAddress = argc > 1 ? argv[1] : "127.0.0.1";
+	for (;;) {
+		std::cout << "Player name (10글자 이내): " << std::flush;
+		if (!std::getline(std::cin, loginName)) return;
+		if (NetworkClient::IsValidPlayerName(loginName)) break;
+		std::cout << "Invalid name. Enter 1-9 characters; a blank name is not allowed.\n";
+	}
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(0, 0);
@@ -132,6 +139,7 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	// cube = new Cube(); 이런식
 	player = new Player();
 	player->setup(shaderProgramID);
+	player->playerName = loginName;
 	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[0]->setup(shaderProgramID);
 	otherPlayer[0]->SetPosition(glm::vec3(2.0f, 1.0f, 2.0f)); // 임시로 위치 설정
@@ -279,8 +287,9 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 
 	player->render(viewProjectionMatrix);
-	otherPlayer[0]->render(viewProjectionMatrix);
-	otherPlayer[1]->render(viewProjectionMatrix);
+	for (auto* other : otherPlayer) {
+		if (other && other->playerID >= 0) other->render(viewProjectionMatrix);
+	}
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
@@ -399,7 +408,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 
 	GLfloat gl_x, gl_y;
 	Win_to_GL_mouse(x, y, gl_x, gl_y);
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && networkClient.IsLoggedIn()) {
 		if (player && player->canFire && player->bulletCount > 0) {
 			// 총구 위치에서 총알 생성
 			glm::vec3 muzzlePos = player->getMuzzlePosition();
@@ -493,7 +502,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		key_d = true;
 		break;
 	case 'r':
-		if (player) {
+		if (player && networkClient.IsLoggedIn()) {
 			player->is_reloading = true;
 		}
 		break;
@@ -621,10 +630,10 @@ GLvoid MainLoop()
 GLvoid Logic()
 {
 	//플레이어
-	if (player) {
+	if (player && networkClient.IsLoggedIn()) {
 		if (!uiMgr || !uiMgr->IsChatting()) {
 			player->processMovement(key_w, key_a, key_s, key_d);
-			networkClient.C2S_SendMoveInfo(player->getPosition());
+			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
 		}
 		player->reload();
 	}
@@ -655,9 +664,19 @@ GLvoid ReportNetworkStatus()
 		message = "[Network] Connecting to " + serverAddress + ":" + std::to_string(PORT) + "...";
 		break;
 	case NetworkClient::State::Connected:
-		message = "[Network] Connected to " + serverAddress + ":" + std::to_string(PORT);
+		if (networkClient.C2S_SendLoginInfo(loginName)) {
+			message = "[Login] Connected. Logging in as " + loginName + "...";
+		}
+		else {
+			message = "[Login] Could not queue the login request (Winsock " +
+				std::to_string(networkClient.GetLastError()) + ").";
+		}
 		break;
 	case NetworkClient::State::Failed:
+		if (player) player->SetPlayerID(-1);
+		for (auto* other : otherPlayer) {
+			if (other) other->SetPlayerID(-1);
+		}
 		message = "[Network] Connection failed (Winsock " +
 			std::to_string(networkClient.GetLastError()) + "). Check the server IP and port.";
 		break;
@@ -670,8 +689,11 @@ GLvoid ReportNetworkStatus()
 void SetLambdaFunctions()
 {
 	uiMgr->onChatSubmit = [](const std::string& message) {
-		// TODO: pass the server-assigned player ID once login is implemented.
-		if (networkClient.C2S_SendChatInfo(message)) return true;
+		if (!networkClient.IsLoggedIn()) {
+			uiMgr->AddChatMessage("[Login] Chat is available after login completes.");
+			return false;
+		}
+		if (networkClient.C2S_SendChatInfo(message, player->playerID)) return true;
 		if (networkClient.GetState() != NetworkClient::State::Connected) {
 			uiMgr->AddChatMessage("[Network] Chat not sent: server is not connected.");
 		}
@@ -682,21 +704,56 @@ void SetLambdaFunctions()
 		return false;
 	};
 
+	networkClient.onLoginResult = [](short playerId) {
+		player->SetPlayerID(playerId);
+		const std::string message = "[Login] Logged in as " + player->playerName +
+			" (ID " + std::to_string(playerId) + ").";
+		std::cout << message << '\n';
+		if (uiMgr) uiMgr->AddChatMessage(message);
+	};
+
+	networkClient.onOtherLogin = [](short playerId, const std::string& name) {
+		Player* target = nullptr;
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				target = other;
+				break;
+			}
+		}
+		if (!target) {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID < 0) {
+					target = other;
+					break;
+				}
+			}
+		}
+		if (!target) return;
+		target->SetPlayerID(playerId);
+		target->playerName = name;
+		if (uiMgr) uiMgr->AddChatMessage("[Login] " + name + " (ID " +
+			std::to_string(playerId) + ") is connected.");
+	};
+
 	networkClient.onChatReceived = [](short playerId, const std::string& message) {
 		if (uiMgr) {
-			uiMgr->AddChatMessage("Player " + std::to_string(playerId) + ": " + message);
+			std::string name = "Player " + std::to_string(playerId);
+			for (const auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					name = other->playerName;
+					break;
+				}
+			}
+			uiMgr->AddChatMessage(name + ": " + message);
 		}
 	};
 
-	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float y)
-	{
-			//for (auto p : otherPlayer) {
-			//	if (p && p->playerID == playerId) {
-			//		p->SetPosition(glm::vec3(x, p->getPosition().y, y));
-			//		return;
-			//	}
-			//}
-			otherPlayer[0]->SetPosition(glm::vec3(x, otherPlayer[0]->getPosition().y, y));
-			return;
+	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float z) {
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				other->SetPosition(glm::vec3(x, other->getPosition().y, z));
+				return;
+			}
+		}
 	};
 }
