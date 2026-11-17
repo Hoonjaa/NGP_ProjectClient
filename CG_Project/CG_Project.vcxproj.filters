@@ -44,8 +44,8 @@
     <ClCompile Include="Random.cpp">
       <Filter>Header</Filter>
     </ClCompile>
-    <ClCompile Include="Room.cpp">
-      <Filter>Object\Room</Filter>
+    <ClCompile Include="Obstacle.cpp">
+      <Filter>Object\Obstacle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,8 +106,8 @@
     <ClInclude Include="Protocol.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="Room.h">
-      <Filter>Object\Room</Filter>
+    <ClInclude Include="Obstacle.h">
+      <Filter>Object\Obstacle</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header</Filter>
@@ -149,8 +149,8 @@
     <Filter Include="Timer">
       <UniqueIdentifier>{f7e8167e-b0c0-4b9e-8a2a-6a5ed317cae7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Object\Room">
-      <UniqueIdentifier>{25b770b8-f06e-4a0e-b27c-fb3c485e9be8}</UniqueIdentifier>
+    <Filter Include="Object\Obstacle">
+      <UniqueIdentifier>{44653a32-3655-41cf-bc81-7c1c7f570b99}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
