@@ -274,7 +274,12 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::vec3 viewPos;
 
 	if (player) {
-		viewMatrix = player->getFirstPersonViewMatrix();
+		if (player->isFirstPersonMode()) {
+			viewMatrix = player->getFirstPersonViewMatrix();
+		}
+		else {
+			viewMatrix = player->getThirdPersonViewMatrix();
+		}
 		viewPos = player->getPosition() + glm::vec3(0.0f, 0.7f, 0.0f); // 카메라 위치 (조명용임 실제로 바꾸는건 Player_body로)
 	}
 
@@ -478,16 +483,16 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			glEnable(GL_CULL_FACE);
 		break;
 	case 'c':
-		//if (player) {
-		//	player->toggleViewMode();
-		//	// 1인칭 모드로 전환할 때 마우스를 중앙에 위치
-		//	if (player->isFirstPersonMode()) {
-		//		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
-		//		glutWarpPointer(centerX, centerY);
-		//		firstMouse = true;
-		//		mouseWarped = true;
-		//	}
-		//}
+		if (player) {
+			player->toggleViewMode();
+			// 1인칭 모드로 전환할 때 마우스를 중앙에 위치
+			if (player->isFirstPersonMode()) {
+				glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+				glutWarpPointer(centerX, centerY);
+				firstMouse = true;
+				mouseWarped = true;
+			}
+		}
 		break;
 	case 'w':
 		key_w = true;
@@ -539,30 +544,6 @@ GLvoid SpecialKeyboard(int key, int x, int y)
 
 GLvoid TimerFunction(int value)
 {
-	////플레이어
-	//if (player) {
-	//	player->processMovement(key_w, key_a, key_s, key_d);
-	//	player->reload();
-	//}
-	//
-	//// 총알 업데이트 및 충돌 체크
-	//for (int i = bullets.size() - 1; i >= 0; i--) {
-	//	if (bullets[i]) {
-	//		bullets[i]->update();
-
-	//		// 생명주기가 끝난 총알 삭제
-	//		if (bullets[i]->Destroy()) {
-	//			delete bullets[i];
-	//			bullets.erase(bullets.begin() + i);
-	//			continue;
-	//		}
-	//	}
-	//}
-	//
-	//glutPostRedisplay();
-	//if (Timer) {
-	//	glutTimerFunc(16, TimerFunction, 1);
-	//}
 }
 
 GLvoid setViewPerspectiveMatrix() {

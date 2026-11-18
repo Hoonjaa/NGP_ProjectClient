@@ -87,7 +87,7 @@ GLvoid Player::setup(GLuint shader) {
 
 	auto P_body = std::make_shared<Player_body>();
 	player_body = std::make_shared<Object_Part>(P_body, shader);
-	player_body->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+	player_body->translate(glm::vec3(10.0f, 1.0f, 0.0f));
 	root->addChild(player_body);
 
 	auto G_body = std::make_shared<Gun_body>();
@@ -154,7 +154,7 @@ GLvoid Player::updateGunRotation() {
 		gun_magazine->setTransform(glm::mat4(1.0f));
 
 		// Yaw 회전 (Y축 중심으로 좌우 회전)
-		player_body->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+		player_body->translate(glm::vec3(10.0f, 1.0f, 0.0f));
 		player_body->rotate(currentYaw - glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
 		// Pitch 회전 (X축 중심으로 상하 회전)
