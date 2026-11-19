@@ -26,7 +26,7 @@ GLvoid Win_to_GL_mouse(int x, int y, GLfloat& gl_x, GLfloat& gl_y);
 // 타이머 함수
 GLvoid TimerFunction(int value);
 GLvoid MainLoop();
-GLvoid Logic();
+GLvoid Logic(double deltaTime);
 GLvoid ReportNetworkStatus();
 // 람다함수 설정
 void SetLambdaFunctions();
@@ -286,10 +286,25 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 projection = glm::perspective(glm::radians(70.0f), 1.0f, 0.1f, 100.0f);
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 
+	unsigned int hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
+	if (player && player->hit_time <= 0)
+		glUniform1f(hitTimeLocation, false);
+	else
+		glUniform1f(hitTimeLocation, true);
+
 	player->render(viewProjectionMatrix);
+	glUniform1f(hitTimeLocation, false);
+
 	for (auto* other : otherPlayer) {
+		if (other && other->hit_time <= 0)
+			glUniform1f(hitTimeLocation, false);
+		else
+			glUniform1f(hitTimeLocation, true);
 		if (other && other->playerID >= 0) other->render(viewProjectionMatrix);
+		glUniform1f(hitTimeLocation, false);
 	}
+	
+	
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
@@ -627,7 +642,7 @@ GLvoid MainLoop()
 	glutPostRedisplay();
 }
 
-GLvoid Logic()
+GLvoid Logic(double deltaTime)
 {
 	//플레이어
 	if (player && networkClient.IsLoggedIn()) {
@@ -636,6 +651,24 @@ GLvoid Logic()
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
 		}
 		player->reload();
+	}
+	if (player && player->hit_time > 0.0f) {
+		if (player->hit_time < deltaTime) {
+			player->hit_time = 0.0f;
+		}
+		else {
+			player->hit_time -= deltaTime;
+		};
+	}
+	for (auto* other : otherPlayer) {
+		if (other && other->hit_time > 0.0f) {
+			if (other->hit_time < deltaTime) {
+				other->hit_time = 0.0f;
+			}
+			else {
+				other->hit_time -= deltaTime;
+			};
+		}
 	}
 
 	// 총알 업데이트 및 충돌 체크

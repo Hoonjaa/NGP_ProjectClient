@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-Timer::Timer(double hz, void (*func)())
+Timer::Timer(double hz, void (*func)(double))
     : Cycle(1.0 / 60.0),
     cumulativeTime(0.0),
     previousTime(Clock::now()),
@@ -24,7 +24,7 @@ void Timer::Update()
         cumulativeTime -= Cycle;
 
         if (callback) {
-            callback();
+            callback(Cycle);
             tickCount++;
         }
     }

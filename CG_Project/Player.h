@@ -33,6 +33,7 @@ public:
 	GLint bulletCount = 30;
 	bool canFire = true;
 	float HP = MAX_PLAYER_HP; // 플레이어 체력
+	float hit_time = 2.0f; // 플레이어가 맞은 시간
 	std::string playerName;
 	short playerID = -1; // 플레이어 ID
 
