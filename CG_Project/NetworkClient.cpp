@@ -359,7 +359,7 @@ void NetworkClient::S2C_RecvOtherLogin(const unsigned char* packet, std::size_t 
 
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
 {
-	std::cout << "S2C_RecvChatInfo" << std::endl;
+	// std::cout << "S2C_RecvChatInfo" << std::endl;
     if (packetSize != sizeof(S2C_Chat)) {
         Fail(WSAEINVAL);
         return;
@@ -377,6 +377,18 @@ void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t pa
 //피격 당한 플레이어가 HP정보를 받는 함수
 void NetworkClient::S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    if (packetSize != sizeof(S2C_HitInfo)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+
+	S2C_HitInfo hitinfo{};
+	std::memcpy(&hitinfo, packet, sizeof(hitinfo));
+    if (hitinfo.playerID <0 || hitinfo.playerID >= 3) {
+        Fail(WSAEINVAL);
+        return;
+    }
+	if (onHitInfo) onHitInfo(hitinfo.playerID, hitinfo.HP);
 }
 
 //잘못된 이동에 대한 정보를 받는 함수
