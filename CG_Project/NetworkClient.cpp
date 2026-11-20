@@ -323,6 +323,35 @@ bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
     return true;
 }
 
+bool NetworkClient::C2S_SendForwardInfo(float pitch, float yaw)
+{
+    if (!IsLoggedIn()) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+
+    if (hasQueuedForward && pitch == lastQueuedPitch && yaw == lastQueuedYaw) {
+        lastError = 0;
+        return false;  // 각도가 같아서 큐에 추가할 필요가 없음
+    }
+
+	C2S_ForwardInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_FORWARDINFO;
+    packet.player_id = localPlayerId;
+    packet.pitch = pitch;
+    packet.yaw = yaw;
+
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+    outgoing.push(responsepacket);
+
+    hasQueuedForward = true;
+    lastQueuedPitch = pitch;
+    lastQueuedYaw = yaw;
+    lastError = 0;
+	return true;
+}
 
 void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize)
 {

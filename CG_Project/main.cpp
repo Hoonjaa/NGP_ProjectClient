@@ -652,6 +652,13 @@ GLvoid Logic(double deltaTime)
 		if (!uiMgr || !uiMgr->IsChatting()) {
 			player->processMovement(key_w, key_a, key_s, key_d);
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
+			if (player->isFirstPersonMode()) {
+				const glm::vec3 dir = player->getFireDirection();
+				const float pitch = std::atan2(dir.y, std::hypot(dir.x, dir.z));
+				const float yaw = std::atan2(dir.z, dir.x);
+
+				networkClient.C2S_SendForwardInfo(pitch, yaw);
+			}
 		}
 		player->reload();
 	}
