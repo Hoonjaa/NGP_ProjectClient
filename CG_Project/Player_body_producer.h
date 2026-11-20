@@ -3,7 +3,7 @@
 class Player_body_producer : public Object
 {
 public:
-	Player_body_producer(float Width, float Height, glm::vec3 color);
+	Player_body_producer(GLfloat Width, GLfloat Height, GLfloat Depth, glm::vec3 color);
 	~Player_body_producer();
 
 	GLvoid draw(const GLuint& ShaderID, const glm::mat4& worldMatrix, const glm::mat4& viewProjMatrix) override;

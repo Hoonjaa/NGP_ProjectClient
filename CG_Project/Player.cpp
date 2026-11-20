@@ -87,8 +87,33 @@ GLvoid Player::setup(GLuint shader) {
 
 	auto P_body = std::make_shared<Player_body>();
 	player_body = std::make_shared<Object_Part>(P_body, shader);
-	player_body->translate(glm::vec3(10.0f, 1.0f, 0.0f));
+	player_body->translate(glm::vec3(10.0f, 1.2f, 0.0f));
 	root->addChild(player_body);
+
+	auto P_head = std::make_shared<Player_body_producer>(0.4f, 0.4f, 0.4f, glm::vec3(1.0f, 1.0f, 0.0f));
+	player_head = std::make_shared<Object_Part>(P_head, shader);
+	player_head->translate(glm::vec3(0.0f, 0.6f, 0.0f));
+	player_body->addChild(player_head);
+
+	auto P_Larm = std::make_shared<Player_body_producer>(0.15f, 0.6f, 0.15f, glm::vec3(1.0f, 0.752f, 0.796f));
+	player_Larm = std::make_shared<Object_Part>(P_Larm, shader);
+	player_Larm->translate(glm::vec3(0.375f, 0.1f, 0.0f));
+	player_body->addChild(player_Larm);
+
+	auto P_Rarm = std::make_shared<Player_body_producer>(0.15f, 0.15f, 0.6f, glm::vec3(1.0f, 0.752f, 0.796f));
+	player_Rarm = std::make_shared<Object_Part>(P_Rarm, shader);
+	player_Rarm->translate(glm::vec3(-0.375f, 0.375f, 0.25f));
+	player_body->addChild(player_Rarm);
+
+	auto P_Lleg = std::make_shared<Player_body_producer>(0.2f, 0.7f, 0.2f, glm::vec3(0.0f, 1.0f, 0.5f));
+	player_Lleg = std::make_shared<Object_Part>(P_Lleg, shader);
+	player_Lleg->translate(glm::vec3(0.15f, -0.75f, 0.0f));
+	player_body->addChild(player_Lleg);
+
+	auto P_Rleg = std::make_shared<Player_body_producer>(0.2f, 0.7f, 0.2f, glm::vec3(0.0f, 1.0f, 0.5f));
+	player_Rleg = std::make_shared<Object_Part>(P_Rleg, shader);
+	player_Rleg->translate(glm::vec3(-0.15f, -0.75f, 0.0f));
+	player_body->addChild(player_Rleg);
 
 	auto G_body = std::make_shared<Gun_body>();
 	gun_body = std::make_shared<Object_Part>(G_body, shader);
