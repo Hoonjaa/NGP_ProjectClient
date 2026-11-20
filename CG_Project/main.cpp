@@ -293,6 +293,7 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 		glUniform1f(hitTimeLocation, true);
 
 	player->render(viewProjectionMatrix);
+
 	glUniform1f(hitTimeLocation, false);
 
 	for (auto* other : otherPlayer) {
@@ -437,6 +438,8 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			player->bulletCount--;
 
 			std::cout << "총알 발사! 남은 총알: " << player->bulletCount << std::endl;
+			
+			
 		}
 	}
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
@@ -735,7 +738,7 @@ void SetLambdaFunctions()
 				std::to_string(networkClient.GetLastError()) + "). Please try again.");
 		}
 		return false;
-	};
+		};
 
 	networkClient.onLoginResult = [](short playerId) {
 		player->SetPlayerID(playerId);
@@ -743,7 +746,7 @@ void SetLambdaFunctions()
 			" (ID " + std::to_string(playerId) + ").";
 		std::cout << message << '\n';
 		if (uiMgr) uiMgr->AddChatMessage(message);
-	};
+		};
 
 	networkClient.onOtherLogin = [](short playerId, const std::string& name) {
 		Player* target = nullptr;
@@ -766,7 +769,7 @@ void SetLambdaFunctions()
 		target->playerName = name;
 		if (uiMgr) uiMgr->AddChatMessage("[Login] " + name + " (ID " +
 			std::to_string(playerId) + ") is connected.");
-	};
+		};
 
 	networkClient.onChatReceived = [](short playerId, const std::string& message) {
 		if (uiMgr) {
@@ -779,13 +782,29 @@ void SetLambdaFunctions()
 			}
 			uiMgr->AddChatMessage(name + ": " + message);
 		}
-	};
+		};
 
 	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float z) {
 		for (auto* other : otherPlayer) {
 			if (other && other->playerID == playerId) {
 				other->SetPosition(glm::vec3(x, other->getPosition().y, z));
 				return;
+			}
+		}
+		};
+
+	networkClient.onHitInfo = [](short playerId, int HP) {
+		if (player && player->playerID == playerId) {
+			player->hit_time = 0.2f; // 0.2초 동안 빨간색으로 표시
+			player->HP = HP;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					other->hit_time = 0.2f; // 0.2초 동안 빨간색으로 표시
+					other->HP = HP;
+					return;
+				}
 			}
 		}
 	};

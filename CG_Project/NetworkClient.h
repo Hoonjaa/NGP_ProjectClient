@@ -32,22 +32,7 @@ public:
     short GetPlayerId() const { return localPlayerId; }
     static bool IsValidPlayerName(const std::string& name);
 
-public:
-    // true means queued; gameplay requires a successful login response.
-    bool C2S_SendLoginInfo(const std::string& name);
-    bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
-    bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
-    // Invoked by Update on the GLUT thread when a complete S2C_CHAT arrives.
 
-    // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
-    std::function<void(short)> onLoginResult;
-    std::function<void(short, const std::string&)> onOtherLogin;
-    std::function<void(short, const std::string&)> onChatReceived;
-    std::function<void(short, const float x, const float y)> onOtherMoveReceived;
-	std::function<void(short, const int)> onHitInfo;
-
-
-    std::queue<std::vector<unsigned char>> outgoing;
 private:
     bool Fail(int error);
     void FlushSendQueue();
@@ -69,7 +54,20 @@ private:
     bool loginRequested = false;
     std::chrono::steady_clock::time_point loginStarted;
     std::chrono::steady_clock::time_point connectStarted;
+public:
+    // true means queued; gameplay requires a successful login response.
+    bool C2S_SendLoginInfo(const std::string& name);
+    bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
+    bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
 
+    // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
+    std::function<void(short)> onLoginResult;
+    std::function<void(short, const std::string&)> onOtherLogin;
+    std::function<void(short, const std::string&)> onChatReceived;
+    std::function<void(short, const float x, const float y)> onOtherMoveReceived;
+    std::function<void(short, const int)> onHitInfo;
+
+    std::queue<std::vector<unsigned char>> outgoing;
 private:
     void S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvOtherLogin(const unsigned char* packet, std::size_t packetSize);

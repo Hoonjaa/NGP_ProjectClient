@@ -33,7 +33,7 @@ void main()
 
 	vec3 result = (ambient + diffuse + specular) * frag_col;
 	if (hitTime){
-		result *= vec3(0.7f, 0.0f, 0.0f);
+		result += vec3(1.7f, 0.0f, 0.0f);
 	}
 
 	color = vec4(result, 1.0f);

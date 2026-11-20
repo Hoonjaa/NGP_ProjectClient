@@ -105,6 +105,7 @@ struct S2C_Death {	//S2C_DEATH
 	unsigned char size;
 	PACKET_TYPE   type;
 	short playerID;
+	short killerID;	// 죽인 플레이어 ID
 };
 
 struct S2C_Respawn {	//S2C_REASPAWN
