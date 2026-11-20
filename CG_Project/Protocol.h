@@ -92,26 +92,34 @@ struct S2C_Chat {	//S2C_CHAT
 struct S2C_KillLog {	//S2C_KILLLOG 
 	unsigned char size;
 	PACKET_TYPE   type;
+	short killer_id;		// 킬한 플레이어 ID
+	short victim_id;		// 죽은 플레이어 ID
 };
 
 struct S2C_HitInfo {	//S2C_HITINFO
 	unsigned char size;
 	PACKET_TYPE   type;
+	short playerID;		// 플레이어 ID
+	int HP;		// 데미지받고 난 후 HP
 };
 
 struct S2C_Death {	//S2C_DEATH
 	unsigned char size;
 	PACKET_TYPE   type;
+	short playerID;
+	short killerID;	// 죽인 플레이어 ID
 };
 
 struct S2C_Respawn {	//S2C_REASPAWN
 	unsigned char size;
 	PACKET_TYPE   type;
+	short playerID;
 };
 
 struct S2C_ReleaseInvincibility {	//S2C_RELEASEINVINCIBILITY
 	unsigned char size;
 	PACKET_TYPE   type;
+	short playerID;
 };
 
 struct S2C_OtherForward {	//S2C_OTHERFORWARD

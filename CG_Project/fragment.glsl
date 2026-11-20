@@ -11,6 +11,8 @@ uniform vec3 viewPos;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
+uniform bool hitTime;
+
 void main()
 {
 	float ambientLight = 0.6f;
@@ -30,6 +32,9 @@ void main()
 
 
 	vec3 result = (ambient + diffuse + specular) * frag_col;
+	if (hitTime){
+		result += vec3(1.7f, 0.0f, 0.0f);
+	}
 
 	color = vec4(result, 1.0f);
 }

@@ -12,7 +12,7 @@ private:
 
     Clock::time_point previousTime; // 이전 시간
 
-    void (*callback)();
+    void (*callback)(double);
 private:
     // TPS 확인용
     int tickCount = 0;
@@ -20,7 +20,7 @@ private:
     double tpsElapsed = 0.0;
 
 public:
-    Timer(double cycle, void (*func)());
+    Timer(double cycle, void (*func)(double));
 
     void Update();
     void Reset();
