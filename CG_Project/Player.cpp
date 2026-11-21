@@ -3,8 +3,8 @@
 GLvoid Player::reload() {
 	if (is_reloading) {
 		gun_reload_angle += gun_reload_speed;
-		if (gun_reload_angle >= 40.0f) {
-			gun_reload_angle = 40.0f;
+		if (gun_reload_angle >= 20.0f) {
+			gun_reload_angle = 20.0f;
 			gun_reload_speed = -gun_reload_speed;
 		}
 		if (gun_reload_angle <= -0.01f) {
@@ -68,9 +68,9 @@ glm::vec3 Player::getMuzzlePosition() const
 
 	if (firstPersonMode) {
 		// 1인칭 모드: 카메라(눈) 위치 기준으로 총구 위치 계산
-		muzzlePos.y += 0.3f; // 눈 높이
-		muzzlePos += rightDir * 0.4f; // 오른쪽으로 약간 이동 (총이 오른쪽에 있다고 가정)
-		muzzlePos += fireDir * 1.7f; // 앞쪽으로 약간 이동 (총구가 앞에 있음)
+		muzzlePos.y += 0.4f; // 눈 높이
+		muzzlePos += rightDir * 0.55f; // 오른쪽으로 약간 이동 (총이 오른쪽에 있다고 가정)
+		muzzlePos += fireDir * 2.0f; // 앞쪽으로 약간 이동 (총구가 앞에 있음)
 	}
 	else {
 		// 3인칭 모드: 플레이어 몸체 기준으로 총구 위치 계산
@@ -87,32 +87,57 @@ GLvoid Player::setup(GLuint shader) {
 
 	auto P_body = std::make_shared<Player_body>();
 	player_body = std::make_shared<Object_Part>(P_body, shader);
-	player_body->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+	player_body->translate(glm::vec3(0.0f, 1.2f, 10.0f));
 	root->addChild(player_body);
+
+	auto P_head = std::make_shared<Player_body_producer>(0.4f, 0.4f, 0.4f, glm::vec3(1.0f, 1.0f, 0.0f));
+	player_head = std::make_shared<Object_Part>(P_head, shader);
+	player_head->translate(glm::vec3(0.0f, 0.6f, 0.0f));
+	player_body->addChild(player_head);
+
+	auto P_Larm = std::make_shared<Player_body_producer>(0.15f, 0.6f, 0.15f, glm::vec3(1.0f, 0.752f, 0.796f));
+	player_Larm = std::make_shared<Object_Part>(P_Larm, shader);
+	player_Larm->translate(glm::vec3(0.375f, 0.1f, 0.0f));
+	player_body->addChild(player_Larm);
+
+	auto P_Rarm = std::make_shared<Player_body_producer>(0.15f, 0.15f, 0.6f, glm::vec3(1.0f, 0.752f, 0.796f));
+	player_Rarm = std::make_shared<Object_Part>(P_Rarm, shader);
+	player_Rarm->translate(glm::vec3(-0.375f, 0.375f, 0.25f));
+	player_body->addChild(player_Rarm);
+
+	auto P_Lleg = std::make_shared<Player_body_producer>(0.2f, 0.7f, 0.2f, glm::vec3(0.0f, 1.0f, 0.5f));
+	player_Lleg = std::make_shared<Object_Part>(P_Lleg, shader);
+	player_Lleg->translate(glm::vec3(0.15f, -0.75f, 0.0f));
+	player_body->addChild(player_Lleg);
+
+	auto P_Rleg = std::make_shared<Player_body_producer>(0.2f, 0.7f, 0.2f, glm::vec3(0.0f, 1.0f, 0.5f));
+	player_Rleg = std::make_shared<Object_Part>(P_Rleg, shader);
+	player_Rleg->translate(glm::vec3(-0.15f, -0.75f, 0.0f));
+	player_body->addChild(player_Rleg);
 
 	auto G_body = std::make_shared<Gun_body>();
 	gun_body = std::make_shared<Object_Part>(G_body, shader);
-	gun_body->translate(glm::vec3(-0.3f, 0.45f, 0.7f));
-	player_body->addChild(gun_body);
+	gun_body->translate(glm::vec3(0.0f, 0.15f, 0.5f));
+	player_Rarm->addChild(gun_body);
 
 	auto G_cover = std::make_shared<Gun_cover>();
 	gun_cover = std::make_shared<Object_Part>(G_cover, shader);
-	gun_cover->translate(glm::vec3(0.0f, 0.0f, 0.25f));
+	gun_cover->translate(glm::vec3(0.0f, 0.0f, 0.125f));
 	gun_body->addChild(gun_cover);
 
 	auto G_barrel = std::make_shared<Gun_barrel>();
 	gun_barrel = std::make_shared<Object_Part>(G_barrel, shader);
-	gun_barrel->translate(glm::vec3(0.0f, 0.0f, 0.7f));
+	gun_barrel->translate(glm::vec3(0.0f, 0.0f, 0.35f));
 	gun_body->addChild(gun_barrel);
 
 	auto G_handle = std::make_shared<Gun_handle>();
 	gun_handle = std::make_shared<Object_Part>(G_handle, shader);
-	gun_handle->translate(glm::vec3(0.0f, -0.25f, -0.45f));
+	gun_handle->translate(glm::vec3(0.0f, -0.125f, -0.225f));
 	gun_body->addChild(gun_handle);
 
 	auto G_magazine = std::make_shared<Gun_magazine>();
 	gun_magazine = std::make_shared<Object_Part>(G_magazine, shader);
-	gun_magazine->translate(glm::vec3(0.0f, -0.3f, -0.025f));
+	gun_magazine->translate(glm::vec3(0.0f, -0.15f, -0.0125f));
 	gun_body->addChild(gun_magazine);
 }
 
@@ -150,20 +175,20 @@ GLvoid Player::updateGunRotation() {
 
 		// 총의 로컬 변환 초기화 (이전 회전 제거)
 		player_body->setTransform(glm::mat4(1.0f));
-		gun_body->setTransform(glm::mat4(1.0f));
+		player_Rarm->setTransform(glm::mat4(1.0f));
 		gun_magazine->setTransform(glm::mat4(1.0f));
 
 		// Yaw 회전 (Y축 중심으로 좌우 회전)
-		player_body->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+		player_body->translate(glm::vec3(0.0f, 1.0f, 10.0f));
 		player_body->rotate(currentYaw - glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
 		// Pitch 회전 (X축 중심으로 상하 회전)
-		gun_body->translate(glm::vec3(-0.3f, 0.45f, 0.7f));
-		gun_body->translate(glm::vec3(0.0f, 0.0f, -0.7f));
-		gun_body->rotate(currentPitch + glm::radians(gun_reload_angle), glm::vec3(-1.0f, 0.0f, 0.0f));
-		gun_body->translate(glm::vec3(0.0f, 0.0f, 0.7f));
+		player_Rarm->translate(glm::vec3(-0.375f, 0.375f, 0.25f));
+		player_Rarm->translate(glm::vec3(0.0f, 0.0f, -0.3f));
+		player_Rarm->rotate(currentPitch + glm::radians(gun_reload_angle), glm::vec3(-1.0f, 0.0f, 0.0f));
+		player_Rarm->translate(glm::vec3(0.0f, 0.0f, 0.3f));
 
-		gun_magazine->translate(glm::vec3(0.0f, -0.3f, -0.025f));
+		gun_magazine->translate(glm::vec3(0.0f, -0.15f, -0.0125f));
 		gun_magazine->translate(glm::vec3(0.0f, 0.0f, -0.6f));
 		gun_magazine->rotate(glm::radians(gun_reload_angle) * 2, glm::vec3(1.0f, 0.0f, 0.0f));
 		gun_magazine->translate(glm::vec3(0.0f, 0.0f, 0.6f));

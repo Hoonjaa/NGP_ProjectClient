@@ -9,6 +9,7 @@
 #include "Gun_barrel.h"
 #include "Gun_handle.h"
 #include "Gun_magazine.h"
+#include "Player_body_producer.h"
 
 #define MAX_PLAYER_HP 200
 
@@ -17,6 +18,11 @@ class Player
 private:
 	std::shared_ptr<TreeNode> root;
 	std::shared_ptr<Object_Part> player_body;
+	std::shared_ptr<Object_Part> player_head;
+	std::shared_ptr<Object_Part> player_Larm;
+	std::shared_ptr<Object_Part> player_Rarm;
+	std::shared_ptr<Object_Part> player_Lleg;
+	std::shared_ptr<Object_Part> player_Rleg;
 	std::shared_ptr<Object_Part> gun_body;
 	std::shared_ptr<Object_Part> gun_cover;
 	std::shared_ptr<Object_Part> gun_barrel;

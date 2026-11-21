@@ -47,6 +47,9 @@
     <ClCompile Include="Obstacle.cpp">
       <Filter>Object\Obstacle</Filter>
     </ClCompile>
+    <ClCompile Include="Player_body_producer.cpp">
+      <Filter>Object\Player</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkClient.h">
@@ -111,6 +114,9 @@
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Player_body_producer.h">
+      <Filter>Object\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
