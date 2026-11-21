@@ -28,7 +28,7 @@ private:
 	std::shared_ptr<Object_Part> gun_barrel;
 	std::shared_ptr<Object_Part> gun_handle;
 	std::shared_ptr<Object_Part> gun_magazine;
-	bool firstPersonMode = false; // 1인칭/3인칭 모드 전환용
+	bool firstPersonMode = true; // 1인칭/3인칭 모드 전환용
 
 	// 총 회전 업데이트를 위한 private 메서드
 	GLvoid updateGunRotation();

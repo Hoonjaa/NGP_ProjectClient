@@ -441,6 +441,7 @@ void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::siz
 //플레이어 방향벡터 정보 받는 함수
 void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t packetSize)
 {
+	printf("S2C_RecvForward called with packetSize: %zu\n", packetSize);
     if(packetSize != sizeof(S2C_OtherForward)) {
         Fail(WSAEINVAL);
         return;
