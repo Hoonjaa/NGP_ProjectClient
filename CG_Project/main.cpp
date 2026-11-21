@@ -413,7 +413,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 
 	GLfloat gl_x, gl_y;
 	Win_to_GL_mouse(x, y, gl_x, gl_y);
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && networkClient.IsLoggedIn()) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN /* && networkClient.IsLoggedIn()*/) {
 		if (player && player->canFire && player->bulletCount > 0) {
 			// 총구 위치에서 총알 생성
 			glm::vec3 muzzlePos = player->getMuzzlePosition();
@@ -507,8 +507,9 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		key_d = true;
 		break;
 	case 'r':
-		if (player && networkClient.IsLoggedIn()) {
+		if (player /* && networkClient.IsLoggedIn()*/) {
 			player->is_reloading = true;
+			player->canFire = false;
 		}
 		break;
 	}
@@ -611,7 +612,7 @@ GLvoid MainLoop()
 GLvoid Logic()
 {
 	//플레이어
-	if (player && networkClient.IsLoggedIn()) {
+	if (player /* && networkClient.IsLoggedIn()*/) {
 		if (!uiMgr || !uiMgr->IsChatting()) {
 			player->processMovement(key_w, key_a, key_s, key_d);
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);

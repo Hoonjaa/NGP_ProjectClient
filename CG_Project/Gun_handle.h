@@ -8,40 +8,40 @@ private:
     GLvoid setVertexInfo() {
         GLfloat temp[9 * 24] = {
             // ¾Õ¸é (z = +0.5, normal = 0, 0, 1)
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, -0.164f, 0.986f,
 
             // ¿ÞÂÊ¸é (x = -0.5, normal = -1, 0, 0)
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  -1.0f, 0.0f, 0.0f,
 
             // µÞ¸é (z = -0.5, normal = 0, 0, -1)
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 0.164f, -0.986f,
 
             // ¿À¸¥ÂÊ¸é (x = +0.5, normal = 1, 0, 0)
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  1.0f, 0.0f, 0.0f,
 
             // À­¸é (y = +0.5, normal = 0, 1, 0)
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
-            vPos.x + 0.05f, vPos.y + 0.15f, vPos.z + 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z - 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y + 0.075f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, 1.0f, 0.0f,
 
             // ¾Æ·§¸é (y = -0.5, normal = 0, -1, 0)
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z + 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
-            vPos.x - 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
-            vPos.x + 0.05f, vPos.y - 0.15f, vPos.z - 0.1f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z + 0.025f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
+            vPos.x - 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
+            vPos.x + 0.025f, vPos.y - 0.075f, vPos.z - 0.05f,  vColor.r, vColor.g, vColor.b,  0.0f, -1.0f, 0.0f,
         };
         memcpy(vertices, temp, sizeof(temp));
     }
