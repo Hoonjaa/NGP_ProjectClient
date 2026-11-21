@@ -260,6 +260,19 @@ GLvoid Player::handleMouseMovement(float deltaX, float deltaY)
 	}
 }
 
+void Player::setForwardDirection(float pitch, float yaw)
+{
+	if (!player_body || !gun_body || !gun_magazine) return;
+
+	auto body = std::dynamic_pointer_cast<Player_body>(player_body->getObject());
+	if (!body) return;
+
+	body->pitch = pitch;
+	body->yaw = yaw;
+	body->updateFaceDirection(0.0f, 0.0f);
+	updateGunRotation();
+}
+
 glm::mat4 Player::getFirstPersonViewMatrix() const
 {
 	if (player_body && player_body->getObject()) {

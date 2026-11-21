@@ -815,4 +815,13 @@ void SetLambdaFunctions()
 			}
 		}
 	};
+
+	networkClient.onOtherForwardReceived = [](short playerId, const float pitch, const float yaw) {
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				other->setForwardDirection(pitch, yaw);
+				return;
+			}
+		}
+	};
 }

@@ -71,6 +71,7 @@ public:
     std::function<void(short, const std::string&)> onOtherLogin;
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
+	std::function<void(short, const float pitch, const float yaw)> onOtherForwardReceived;
     std::function<void(short, const int)> onHitInfo;
 
     std::queue<std::vector<unsigned char>> outgoing;
