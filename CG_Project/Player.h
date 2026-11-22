@@ -34,12 +34,17 @@ private:
 	GLvoid updateGunRotation();
 	GLvoid setViewProjMatrixRecursive(std::shared_ptr<TreeNode> node, const glm::mat4& viewProjMatrix);
 
-public:
+public: // 클라에만 있는 변수
+	float hit_time = 0.0f; // 플레이어가 맞은 시간
+	bool invincible = true; // 무적 상태 여부
+	int cnt_death = 0, cnt_kill = 0;
+public: // 서버에도 있는 변수
 	// 총알 관련 변수
+	
 	GLint bulletCount = 30;
+	bool isAlive = true; // 렌더링 여부
 	bool canFire = true;
 	float HP = MAX_PLAYER_HP; // 플레이어 체력
-	float hit_time = 0.0f; // 플레이어가 맞은 시간
 	std::string playerName;
 	short playerID = -1; // 플레이어 ID
 

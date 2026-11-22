@@ -75,6 +75,7 @@ void UIMgr::Draw()
 	DrawEnermyHP();
 	DrawChat();
 	DrawKillLog();
+	DrawDebug();
 
 	// 깊이 테스트 다시 활성화
 	glEnable(GL_DEPTH_TEST);
@@ -240,7 +241,7 @@ void UIMgr::DrawKillLog()
 
 	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
 	glDisable(GL_DEPTH_TEST);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f, 0.0f, 0.0f);
 
 	std::size_t count = 0;
 	for (auto it = killLogMessages.rbegin(); it != killLogMessages.rend() && count < 10; ++it, ++count)
@@ -254,4 +255,49 @@ void UIMgr::DrawKillLog()
 	}
 
 	glPopAttrib();
+}
+
+void UIMgr::DrawDebug()
+{
+	if (!player) return;
+
+	constexpr int left = 12;
+	constexpr int lineHeight = 18;
+	int y = WindowHeight - 20;
+
+	char hpText[48];
+	sprintf_s(hpText, "HP: %.1f", player->HP);
+
+	const std::string lines[] = {
+		hpText,
+		std::string("X : ") + std::to_string(player->getPosition().x),
+		std::string("Y : ") + std::to_string(player->getPosition().y),
+		std::string("canFire: ") + (player->canFire ? "true" : "false"),
+		std::string("invincible: ") + (player->invincible ? "true" : "false"),
+		std::string("isAlive: ") + (player->isAlive ? "true" : "false"),
+	};
+
+	glPushAttrib(GL_CURRENT_BIT);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	for (const auto& line : lines) {
+		glWindowPos2i(left, y);
+		glutBitmapString(GLUT_BITMAP_HELVETICA_12,
+			reinterpret_cast<const unsigned char*>(line.c_str()));
+		y -= lineHeight;
+	}
+	glPopAttrib();
+}
+
+void UIMgr::Update(float deltaTime)
+{
+	// Update kill log messages
+	for (auto it = killLogMessages.begin(); it != killLogMessages.end(); ) {
+		it->displayTime -= deltaTime;
+		if (it->displayTime <= 0.0f) {
+			it = killLogMessages.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 }

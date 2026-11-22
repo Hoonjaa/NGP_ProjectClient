@@ -55,6 +55,8 @@ private:
     std::chrono::steady_clock::time_point loginStarted;
     std::chrono::steady_clock::time_point connectStarted;
 public:
+	bool vaildPlayerID(short playerId) const { return playerId >= 0 && playerId < 3; }
+
     // true means queued; gameplay requires a successful login response.
     bool C2S_SendLoginInfo(const std::string& name);
     bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
@@ -66,6 +68,9 @@ public:
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
     std::function<void(short, const int)> onHitInfo;
+	std::function<void(short, short)> onDeathInfo;
+	std::function<void(short, const float, const float)> onRespawnInfo;
+	std::function<void(short)> onInvincibilityReleaseInfo;
 
     std::queue<std::vector<unsigned char>> outgoing;
 private:
@@ -76,7 +81,11 @@ private:
     void S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize); //잘못된 이동에 대한 정보를 받는 함수
     void S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들의 움직임 정보 받는 함수
     void S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
-    void S2C_RecvPlayerStateInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트의 생존, 죽음, 무적정보 받는 함수
+        
+	void S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize); //죽음 정보 받는 함수
+	void S2C_RecvRespawnInfo(const unsigned char* packet, std::size_t packetSize); //부활 정보 받는 함수
+	void S2C_ReleaseInvincibilityInfo(const unsigned char* packet, std::size_t packetSize); //무적 해제 정보 받는 함수
+
     void S2C_RecvOtherReloading(const unsigned char* packet, std::size_t packetSize); //다른 플레이어 장전 정보 받는 함수
     void S2C_RecvForward(const unsigned char* packet, std::size_t packetSize); //플레이어 방향벡터 정보 받는 함수
     void S2C_GameStart(const unsigned char* packet, std::size_t packetSize); //게임 시작정보 받는 함수

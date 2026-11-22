@@ -18,12 +18,15 @@ public:
 	UIMgr(GLuint* shaderProgramID, GLint WW = 800, GLint WH = 800, Player* p = nullptr)
 		: shaderProgramID(shaderProgramID), WindowWidth(WW), WindowHeight(WH), player(p) {}
 	void Draw();
+	void Update(float deltaTime);
 	void BeginChat();
 	void HandleChatKey(unsigned char key);
 	// Return false to keep the input open for retry.
 	std::function<bool(const std::string&)> onChatSubmit;
 	bool IsChatting() const { return isChatting; }
 	void AddChatMessage(const std::string& message);
+	void AddKillLogMessage(const std::string& message, float displayTime = 5.0f) 
+	{ killLogMessages.push_back({ message, displayTime });}
 	void Resize(GLint width, GLint height);
 	Player* player;
 private:
@@ -32,6 +35,7 @@ private:
 	void DrawKillLog();
 	void DrawEnermyHP();
 	void DrawChat();
+	void DrawDebug();
 
 	GLuint* shaderProgramID;
 	GLint WindowWidth, WindowHeight;
@@ -46,12 +50,4 @@ private:
 		{"Alice eliminated Carol",2},
 		{"Bob eliminated Alice",1},
 	};
-	
-	
-	
-	
-	
-	//std::vector<std::string> chatMessages;
-	//std::vector<std::string> killLogMessages;
-	std::queue<std::string> killMessages;
 };

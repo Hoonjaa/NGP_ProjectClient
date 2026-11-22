@@ -189,9 +189,9 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
     case S2C_CHAT:                  S2C_RecvChatInfo(packet, packetSize);           break;
     case S2C_KILLLOG:               S2C_RecvKilllog(packet, packetSize);            break;
     case S2C_HITINFO:               S2C_RecvPlayerHPInfo(packet,packetSize);        break;
-	case S2C_DEATH:                 S2C_RecvPlayerStateInfo(packet, packetSize);    break;
-	case S2C_REASPAWN:              S2C_RecvPlayerStateInfo(packet, packetSize);    break;
-	case S2C_RELEASEINVINCIBILITY:  S2C_RecvPlayerStateInfo(packet, packetSize);    break;
+	case S2C_DEATH:                 S2C_RecvDeathInfo(packet, packetSize);    break;
+	case S2C_REASPAWN:              S2C_RecvRespawnInfo(packet, packetSize);    break;
+	case S2C_RELEASEINVINCIBILITY:  S2C_ReleaseInvincibilityInfo(packet, packetSize);    break;
 	case S2C_OTHERFORWARD:          S2C_RecvForward(packet, packetSize);            break;
     case S2C_OTHERMOVE:             S2C_RecvPlayerMoveInfo(packet, packetSize);     break;
     case S2C_OTHERBULLET:           S2C_RecvBulletInfo(packet, packetSize);         break;
@@ -415,9 +415,43 @@ void NetworkClient::S2C_RecvBulletInfo(const unsigned char* packet, std::size_t 
 {
 }
 
-//다른 클라이언트의 생존, 죽음, 무적정보 받는 함수
-void NetworkClient::S2C_RecvPlayerStateInfo(const unsigned char* packet, std::size_t packetSize)
+void NetworkClient::S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    if (packetSize != sizeof(S2C_Death)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+	S2C_Death death{};
+    std::memcpy(&death, packet, sizeof(death));
+    if (vaildPlayerID(death.playerID) && vaildPlayerID(death.killerID) && onDeathInfo) {
+		onDeathInfo(death.playerID, death.killerID);
+    }
+}
+
+void NetworkClient::S2C_RecvRespawnInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_Respawn)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+	S2C_Respawn respawn{};
+	std::memcpy(&respawn, packet, sizeof(respawn));
+    if (vaildPlayerID(respawn.playerID) && onRespawnInfo) {
+		onRespawnInfo(respawn.playerID, respawn.x, respawn.z);
+    }
+}
+
+void NetworkClient::S2C_ReleaseInvincibilityInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_ReleaseInvincibility)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+	S2C_ReleaseInvincibility release{};
+	std::memcpy(&release, packet, sizeof(release)); 
+    if (vaildPlayerID(release.playerID) && onInvincibilityReleaseInfo) {
+		onInvincibilityReleaseInfo(release.playerID);
+    }
 }
 
 //다른 플레이어 장전 정보 받는 함수

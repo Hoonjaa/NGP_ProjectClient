@@ -290,24 +290,29 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	// 투영 행렬
 	glm::mat4 projection = glm::perspective(glm::radians(70.0f), 1.0f, 0.1f, 100.0f);
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
-
+	
 	unsigned int hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
-	if (player && player->hit_time <= 0)
-		glUniform1f(hitTimeLocation, false);
-	else
-		glUniform1f(hitTimeLocation, true);
-
-	player->render(viewProjectionMatrix);
-
-	glUniform1f(hitTimeLocation, false);
-
-	for (auto* other : otherPlayer) {
-		if (other && other->hit_time <= 0)
+	
+	if (player && player->isAlive) {
+		if (player->hit_time <= 0)
 			glUniform1f(hitTimeLocation, false);
 		else
 			glUniform1f(hitTimeLocation, true);
-		if (other && other->playerID >= 0) other->render(viewProjectionMatrix);
+
+		player->render(viewProjectionMatrix);
+
 		glUniform1f(hitTimeLocation, false);
+	}
+
+	for (auto* other : otherPlayer) {
+		if (other && other->isAlive) {
+			if (other->hit_time <= 0)
+				glUniform1f(hitTimeLocation, false);
+			else
+				glUniform1f(hitTimeLocation, true);
+			if (other->playerID >= 0) other->render(viewProjectionMatrix);
+			glUniform1f(hitTimeLocation, false);
+		}
 	}
 	
 	
@@ -630,8 +635,8 @@ GLvoid MainLoop()
 GLvoid Logic(double deltaTime)
 {
 	//플레이어
-	if (player /* && networkClient.IsLoggedIn()*/) {
-		if (!uiMgr || !uiMgr->IsChatting()) {
+	if (player&& player->isAlive ) {
+		if (!uiMgr || !uiMgr->IsChatting() && player->isAlive) {
 			player->processMovement(key_w, key_a, key_s, key_d);
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
 		}
@@ -646,7 +651,7 @@ GLvoid Logic(double deltaTime)
 		};
 	}
 	for (auto* other : otherPlayer) {
-		if (other && other->hit_time > 0.0f) {
+		if (other && other->isAlive &&other->hit_time > 0.0f) {
 			if (other->hit_time < deltaTime) {
 				other->hit_time = 0.0f;
 			}
@@ -669,7 +674,7 @@ GLvoid Logic(double deltaTime)
 			}
 		}
 	}
-
+	uiMgr->Update(deltaTime);
 	// 확인용 없애도 된다.
 	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
 }
@@ -785,6 +790,82 @@ void SetLambdaFunctions()
 				if (other && other->playerID == playerId) {
 					other->hit_time = 0.2f; // 0.2초 동안 빨간색으로 표시
 					other->HP = HP;
+					return;
+				}
+			}
+		}
+	};
+
+	networkClient.onDeathInfo = [](short playerid, short killerid)
+	{
+		std::string kill;
+		std::string killed;
+		if (player && player->playerID == playerid) {
+			player->isAlive = false;
+			player->canFire = false;
+			player->HP = 0;
+			killed = player->playerName;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerid) {
+					other->isAlive = false;
+					other->canFire = false;
+					other->HP = 0;
+					killed = other->playerName;
+				}
+			}
+		}
+		if (player && player->playerID == killerid) {
+			kill = player->playerName;
+		}
+		else
+		{
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == killerid) {
+					kill = other->playerName;
+				}
+			}
+		}
+		if (uiMgr && !kill.empty() && !killed.empty()) {
+			uiMgr->AddKillLogMessage(kill + " killed " + killed);
+		}
+	};
+
+	networkClient.onRespawnInfo = [](short playerid, const float x, const float z)
+	{
+		if (player && player->playerID == playerid) {
+			player->isAlive = true;
+			player->invincible = true;
+			player->canFire = true;
+			player->hit_time = 0.0f;
+			player->HP = 100;
+			player->SetPosition(glm::vec3(x, player->getPosition().y, z));
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerid) {
+					other->isAlive = true;
+					other->invincible = true;
+					other->canFire = true;
+					other->hit_time = 0.0f;
+					other->HP = 100;
+					other->SetPosition(glm::vec3(x, other->getPosition().y, z));
+					return;
+				}
+			}
+		}
+	};
+
+	networkClient.onInvincibilityReleaseInfo = [](short playerid)
+	{
+		if (player && player->playerID == playerid) {
+			player->invincible = false;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerid) {
+					other->invincible = false;
 					return;
 				}
 			}
