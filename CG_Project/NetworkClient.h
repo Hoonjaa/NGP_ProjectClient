@@ -54,6 +54,11 @@ private:
     bool loginRequested = false;
     std::chrono::steady_clock::time_point loginStarted;
     std::chrono::steady_clock::time_point connectStarted;
+
+	bool hasQueuedForward = false;
+    float lastQueuedPitch = 0.0f;
+    float lastQueuedYaw = 0.0f;
+
 public:
 	bool vaildPlayerID(short playerId) const { return playerId >= 0 && playerId < 3; }
 
@@ -61,12 +66,14 @@ public:
     bool C2S_SendLoginInfo(const std::string& name);
     bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
     bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
+    bool C2S_SendForwardInfo(float pitch, float yaw);
 
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
     std::function<void(short)> onLoginResult;
     std::function<void(short, const std::string&)> onOtherLogin;
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
+	std::function<void(short, const float pitch, const float yaw)> onOtherForwardReceived;
     std::function<void(short, const int)> onHitInfo;
 	std::function<void(short, short)> onDeathInfo;
 	std::function<void(short, const float, const float)> onRespawnInfo;

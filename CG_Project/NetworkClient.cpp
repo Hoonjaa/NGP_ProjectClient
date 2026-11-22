@@ -323,7 +323,36 @@ bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
     return true;
 }
 
+bool NetworkClient::C2S_SendForwardInfo(float pitch, float yaw)
+{
+    if (!IsLoggedIn()) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
 
+    if (hasQueuedForward && pitch == lastQueuedPitch && yaw == lastQueuedYaw) {
+        lastError = 0;
+        return false;  // 각도가 같아서 큐에 추가할 필요가 없음
+    }
+
+	C2S_ForwardInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_FORWARDINFO;
+    packet.player_id = localPlayerId;
+    packet.pitch = pitch;
+    packet.yaw = yaw;
+
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+    outgoing.push(responsepacket);
+
+    hasQueuedForward = true;
+    lastQueuedPitch = pitch;
+    lastQueuedYaw = yaw;
+    lastError = 0;
+	return true;
+}
+///////////////////////////////////////////////////////////////////////////////////////////
 void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize)
 {
     if (packetSize != sizeof(S2C_LoginResult) || !loginRequested || IsLoggedIn()) {
@@ -399,7 +428,6 @@ void NetworkClient::S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_
 //다른 클라이언트들의 움직임 정보 받는 함수
 void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize)
 {
-    std::cout << "S2C_RecvPlayerMoveInfo" << std::endl;
     if (packetSize != sizeof(S2C_OtherMove)) {
         Fail(WSAEINVAL);
         return;
@@ -409,6 +437,20 @@ void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::siz
 	std::memcpy(&move, packet, sizeof(move));
 	if (IsLoggedIn() && onOtherMoveReceived) onOtherMoveReceived(move.player_id, move.x, move.y);
 }
+
+//플레이어 방향벡터 정보 받는 함수
+void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t packetSize)
+{
+	printf("S2C_RecvForward called with packetSize: %zu\n", packetSize);
+    if(packetSize != sizeof(S2C_OtherForward)) {
+        Fail(WSAEINVAL);
+        return;
+	}
+	S2C_OtherForward forward;
+	std::memcpy(&forward, packet, sizeof(forward));
+	if (IsLoggedIn() && onOtherForwardReceived) onOtherForwardReceived(forward.player_id, forward.pitch, forward.yaw);
+}
+
 
 //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
 void NetworkClient::S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize)
@@ -456,11 +498,6 @@ void NetworkClient::S2C_ReleaseInvincibilityInfo(const unsigned char* packet, st
 
 //다른 플레이어 장전 정보 받는 함수
 void NetworkClient::S2C_RecvOtherReloading(const unsigned char* packet, std::size_t packetSize)
-{
-}
-
-//플레이어 방향벡터 정보 받는 함수
-void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t packetSize)
 {
 }
 

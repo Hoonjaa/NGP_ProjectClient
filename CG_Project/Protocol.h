@@ -60,6 +60,8 @@ struct C2S_ForwardInfo {	//C2S_FORWARDINFO
 	unsigned char size;
 	PACKET_TYPE   type;
 	short player_id;		// 플레이어 ID
+	float pitch;
+	float yaw;
 };
 
 struct C2S_Reloading {	//C2S_RELOADING
@@ -125,6 +127,9 @@ struct S2C_ReleaseInvincibility {	//S2C_RELEASEINVINCIBILITY
 struct S2C_OtherForward {	//S2C_OTHERFORWARD
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;		// 플레이어 ID
+	float pitch;
+	float yaw;
 };
 
 struct S2C_OtherMove {		//S2C_OTHERMOVE

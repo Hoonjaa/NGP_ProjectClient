@@ -179,7 +179,7 @@ GLvoid Player::updateGunRotation() {
 		gun_magazine->setTransform(glm::mat4(1.0f));
 
 		// Yaw 회전 (Y축 중심으로 좌우 회전)
-		player_body->translate(glm::vec3(0.0f, 1.0f, 10.0f));
+		player_body->translate(glm::vec3(0.0f, 1.2f, 10.0f));
 		player_body->rotate(currentYaw - glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 
 		// Pitch 회전 (X축 중심으로 상하 회전)
@@ -283,6 +283,18 @@ GLvoid Player::handleMouseMovement(float deltaX, float deltaY)
 			playerBodyObj->updateFaceDirection(deltaX, -deltaY); // Y축 반전
 		}
 	}
+}
+
+void Player::setForwardDirection(float pitch, float yaw)
+{
+	if (!player_body || !gun_body || !gun_magazine) return;
+
+	auto body = std::dynamic_pointer_cast<Player_body>(player_body->getObject());
+	if (!body) return;
+
+	body->pitch = pitch;
+	body->yaw = yaw;
+	body->updateFaceDirection(0.0f, 0.0f);
 }
 
 glm::mat4 Player::getFirstPersonViewMatrix() const

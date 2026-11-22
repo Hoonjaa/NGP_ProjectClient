@@ -142,10 +142,10 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	player->playerName = loginName;
 	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[0]->setup(shaderProgramID);
-	otherPlayer[0]->SetPosition(glm::vec3(2.0f, 1.0f, 2.0f)); // 임시로 위치 설정
+	otherPlayer[0]->SetPosition(glm::vec3(2.0f, 1.2f, 2.0f)); // 임시로 위치 설정
 	otherPlayer[1] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[1]->setup(shaderProgramID);
-	otherPlayer[1]->SetPosition(glm::vec3(-2.0f, 1.0f, -2.0f)); // 임시로 위치 설정
+	otherPlayer[1]->SetPosition(glm::vec3(-2.0f, 1.2f, -2.0f)); // 임시로 위치 설정
 
 	ground = new Ground();
 	obstacle = new Obstacle();
@@ -639,6 +639,13 @@ GLvoid Logic(double deltaTime)
 		if (!uiMgr || !uiMgr->IsChatting() && player->isAlive) {
 			player->processMovement(key_w, key_a, key_s, key_d);
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
+			if (player->isFirstPersonMode()) {
+				const glm::vec3 dir = player->getFireDirection();
+				const float pitch = std::atan2(dir.y, std::hypot(dir.x, dir.z));
+				const float yaw = std::atan2(dir.z, dir.x);
+
+				networkClient.C2S_SendForwardInfo(pitch, yaw);
+			}
 		}
 		player->reload();
 	}
@@ -868,6 +875,14 @@ void SetLambdaFunctions()
 					other->invincible = false;
 					return;
 				}
+			}
+		}
+	};
+	networkClient.onOtherForwardReceived = [](short playerId, const float pitch, const float yaw) {
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				other->setForwardDirection(pitch, yaw);
+				return;
 			}
 		}
 	};
