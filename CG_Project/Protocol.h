@@ -112,6 +112,8 @@ struct S2C_Respawn {	//S2C_REASPAWN
 	unsigned char size;
 	PACKET_TYPE   type;
 	short playerID;
+	float x;	// 리스폰 위치 X
+	float z;	// 리스폰 위치 Z
 };
 
 struct S2C_ReleaseInvincibility {	//S2C_RELEASEINVINCIBILITY

@@ -240,7 +240,7 @@ void UIMgr::DrawKillLog()
 
 	glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
 	glDisable(GL_DEPTH_TEST);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f, 0.0f, 0.0f);
 
 	std::size_t count = 0;
 	for (auto it = killLogMessages.rbegin(); it != killLogMessages.rend() && count < 10; ++it, ++count)
@@ -254,4 +254,18 @@ void UIMgr::DrawKillLog()
 	}
 
 	glPopAttrib();
+}
+
+void UIMgr::Update(float deltaTime)
+{
+	// Update kill log messages
+	for (auto it = killLogMessages.begin(); it != killLogMessages.end(); ) {
+		it->displayTime -= deltaTime;
+		if (it->displayTime <= 0.0f) {
+			it = killLogMessages.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 }
