@@ -636,6 +636,7 @@ GLvoid Logic(double deltaTime)
 			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
 		}
 		player->reload();
+		player->Swing();
 	}
 	if (player && player->hit_time > 0.0f) {
 		if (player->hit_time < deltaTime) {

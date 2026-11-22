@@ -1,5 +1,59 @@
 #include "Player.h"
 
+GLvoid Player::Swing()
+{
+	if (is_Moving) {
+		swingAngle += swingSpeed;
+		if (swingAngle >= 20.0f) {
+			swingAngle = 20.0f;
+			swingSpeed = -swingSpeed;
+		}
+		if (swingAngle <= -20.0f) {
+			swingAngle = -20.0f;
+			swingSpeed = -swingSpeed;
+		}
+	}
+	else if (swingAngle != 0.0f) {
+		const float returnStep = std::abs(swingSpeed);
+
+		if (swingAngle > 0.0f) {
+			swingAngle = glm::max(0.0f, swingAngle - returnStep);
+		}
+		else {
+			swingAngle = glm::min(0.0f, swingAngle + returnStep);
+		}
+	}
+
+	glm::vec3 currPosition = getPosition();
+	if (prevPosition == currPosition) {
+		is_Moving = false;
+	}
+	else {
+		is_Moving = true;
+	}
+	prevPosition = currPosition;
+
+	// 플레이어 걷기 애니메이션
+	player_Larm->setTransform(glm::mat4(1.0f));
+	player_Lleg->setTransform(glm::mat4(1.0f));
+	player_Rleg->setTransform(glm::mat4(1.0f));
+
+	player_Larm->translate(glm::vec3(0.375f, 0.1f, 0.0f));
+	player_Larm->translate(glm::vec3(0.0f, 0.3f, 0.0f));
+	player_Larm->rotate(glm::radians(swingAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+	player_Larm->translate(glm::vec3(0.0f, -0.3f, 0.0f));
+
+	player_Lleg->translate(glm::vec3(0.15f, -0.75f, 0.0f));
+	player_Lleg->translate(glm::vec3(0.0f, 0.35f, 0.0f));
+	player_Lleg->rotate(glm::radians(swingAngle), glm::vec3(-1.0f, 0.0f, 0.0f));
+	player_Lleg->translate(glm::vec3(0.0f, -0.35f, 0.0f));
+
+	player_Rleg->translate(glm::vec3(-0.15f, -0.75f, 0.0f));
+	player_Rleg->translate(glm::vec3(0.0f, 0.35f, 0.0f));
+	player_Rleg->rotate(glm::radians(swingAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+	player_Rleg->translate(glm::vec3(0.0f, -0.35f, 0.0f));
+}
+
 GLvoid Player::reload() {
 	if (is_reloading) {
 		gun_reload_angle += gun_reload_speed;
