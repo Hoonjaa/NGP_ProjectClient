@@ -35,6 +35,7 @@ private:
 	void DrawKillLog();
 	void DrawEnermyHP();
 	void DrawChat();
+	void DrawDebug();
 
 	GLuint* shaderProgramID;
 	GLint WindowWidth, WindowHeight;
