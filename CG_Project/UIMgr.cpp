@@ -271,7 +271,7 @@ void UIMgr::DrawDebug()
 	const std::string lines[] = {
 		hpText,
 		std::string("X : ") + std::to_string(player->getPosition().x),
-		std::string("Y : ") + std::to_string(player->getPosition().y),
+		std::string("Z : ") + std::to_string(player->getPosition().z),
 		std::string("canFire: ") + (player->canFire ? "true" : "false"),
 		std::string("invincible: ") + (player->invincible ? "true" : "false"),
 		std::string("isAlive: ") + (player->isAlive ? "true" : "false"),

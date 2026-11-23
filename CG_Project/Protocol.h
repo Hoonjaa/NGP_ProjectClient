@@ -137,7 +137,7 @@ struct S2C_OtherMove {		//S2C_OTHERMOVE
 	PACKET_TYPE   type;
 	short player_id;		// 플레이어 ID
 	float x;				// 플레이어 위치 X
-	float y;				// 플레이어 위치 Y
+	float z;				// 플레이어 위치 Z
 };
 
 struct S2C_OtherBullet {	//S2C_OTHERBULLET

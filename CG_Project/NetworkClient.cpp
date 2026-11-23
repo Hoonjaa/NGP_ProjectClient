@@ -435,7 +435,7 @@ void NetworkClient::S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::siz
 
     S2C_OtherMove move;
 	std::memcpy(&move, packet, sizeof(move));
-	if (IsLoggedIn() && onOtherMoveReceived) onOtherMoveReceived(move.player_id, move.x, move.y);
+	if (IsLoggedIn() && onOtherMoveReceived) onOtherMoveReceived(move.player_id, move.x, move.z);
 }
 
 //플레이어 방향벡터 정보 받는 함수
