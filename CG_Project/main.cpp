@@ -779,13 +779,18 @@ void SetLambdaFunctions()
 		};
 
 	networkClient.onOtherMoveReceived = [](short playerId, const float x, const float z) {
+
+		if (player && player->playerID == playerId) {
+			player->SetPosition(glm::vec3(x, player->getPosition().y, z));
+			return;
+		}
 		for (auto* other : otherPlayer) {
 			if (other && other->playerID == playerId) {
 				other->SetPosition(glm::vec3(x, other->getPosition().y, z));
 				return;
 			}
 		}
-		};
+	};
 
 	networkClient.onHitInfo = [](short playerId, int HP) {
 		if (player && player->playerID == playerId) {

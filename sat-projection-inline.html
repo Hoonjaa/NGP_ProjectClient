@@ -1,0 +1,21 @@
+<div id="sat-projection-inline">
+<style>
+#sat-projection-inline {color:var(--foreground)}
+#sat-projection-inline .panels {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 280px),1fr));gap:18px}
+#sat-projection-inline svg {width:100%;display:block}
+#sat-projection-inline .axis {stroke:var(--muted-foreground);stroke-width:1.5}
+#sat-projection-inline .wall {color:var(--blue)}
+#sat-projection-inline .player {color:var(--orange)}
+#sat-projection-inline .shape {fill:currentColor;fill-opacity:.62;stroke:currentColor;stroke-width:1.5}
+#sat-projection-inline .bar {stroke:currentColor;stroke-width:6}
+#sat-projection-inline .guide {stroke:currentColor;stroke-width:1.25;stroke-dasharray:4 4;stroke-opacity:.75}
+#sat-projection-inline .gap {stroke:var(--green);stroke-width:3}
+#sat-projection-inline .legend {display:flex;gap:20px;margin-top:16px}
+#sat-projection-inline .swatch {display:inline-block;width:10px;height:10px;background:currentColor;margin-right:6px}
+</style>
+<div class="panels">
+<section><div>월드 X축에 투영</div><svg viewBox="0 0 320 250" role="img" aria-label="월드 X축에 투영 두 막대가 겹침"><path class="axis" d="M 34.00 215.00 L 226.00 215.00"/><path class="guide wall" d="M 52.00 51.00 L 52.00 215.00"/><path class="guide wall" d="M 200.00 159.00 L 200.00 215.00"/><path class="guide player" d="M 140.00 41.00 L 140.00 215.00"/><path class="guide player" d="M 188.00 89.00 L 188.00 215.00"/><polygon class="shape wall" points="52,51 72,31 200,159 180,179"/><path class="bar wall" d="M 52.00 211.00 L 200.00 211.00"/><polygon class="shape player" points="140,41 188,41 188,89 140,89"/><path class="bar player" d="M 140.00 219.00 L 188.00 219.00"/></svg><div>두 막대가 겹침</div></section>
+<section><div>벽에 수직인 축에 투영</div><svg viewBox="0 0 320 250" role="img" aria-label="벽에 수직인 축에 투영 두 막대 사이에 빈틈 → 충돌 없음"><path class="axis" d="M 145.31 241.69 L 292.39 94.61"/><path class="guide wall" d="M 52.00 51.00 L 194.00 193.00"/><path class="guide wall" d="M 200.00 159.00 L 214.00 173.00"/><path class="guide player" d="M 140.00 89.00 L 219.00 168.00"/><path class="guide player" d="M 188.00 41.00 L 267.00 120.00"/><polygon class="shape wall" points="52,51 72,31 200,159 180,179"/><path class="bar wall" d="M 191.17 190.17 L 211.17 170.17"/><polygon class="shape player" points="140,41 188,41 188,89 140,89"/><path class="bar player" d="M 221.83 170.83 L 269.83 122.83"/><path class="gap" d="M 214.00 173.00 L 219.00 168.00"/></svg><div>두 막대 사이에 빈틈 → 충돌 없음</div></section>
+</div>
+<div class="legend"><span><i class="swatch wall"></i>회전된 벽</span><span><i class="swatch player"></i>플레이어</span></div>
+</div>
