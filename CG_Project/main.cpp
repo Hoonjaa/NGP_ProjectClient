@@ -648,6 +648,7 @@ GLvoid Logic(double deltaTime)
 			}
 		}
 		player->reload();
+		player->Swing();
 	}
 	if (player && player->hit_time > 0.0f) {
 		if (player->hit_time < deltaTime) {

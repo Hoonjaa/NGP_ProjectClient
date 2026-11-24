@@ -49,6 +49,14 @@ public: // 서버에도 있는 변수
 	short playerID = -1; // 플레이어 ID
 
 public:
+	// 플레이어 애니메이션 관련 변수& 함수
+	bool is_Moving = false;
+	glm::vec3 prevPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+	GLfloat swingAngle = 0.0f;
+	GLfloat swingSpeed = 1.5f;
+	GLvoid Swing();
+
+public:
 	GLvoid setup(GLuint shader);
 	GLvoid render(const glm::mat4& viewProjectionMatrix);
 	// 이동 관련 함수
