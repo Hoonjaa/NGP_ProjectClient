@@ -142,10 +142,8 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	player->playerName = loginName;
 	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[0]->setup(shaderProgramID);
-	otherPlayer[0]->SetPosition(glm::vec3(2.0f, 1.2f, 2.0f)); // 임시로 위치 설정
 	otherPlayer[1] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
 	otherPlayer[1]->setup(shaderProgramID);
-	otherPlayer[1]->SetPosition(glm::vec3(-2.0f, 1.2f, -2.0f)); // 임시로 위치 설정
 
 	ground = new Ground();
 	obstacle = new Obstacle();
@@ -735,7 +733,8 @@ void SetLambdaFunctions()
 		return false;
 		};
 
-	networkClient.onLoginResult = [](short playerId) {
+	networkClient.onLoginResult = [](short playerId, float x, float z) {
+		player->SetPosition(glm::vec3(x, player->getPosition().y, z));
 		player->SetPlayerID(playerId);
 		const std::string message = "[Login] Logged in as " + player->playerName +
 			" (ID " + std::to_string(playerId) + ").";
@@ -743,7 +742,7 @@ void SetLambdaFunctions()
 		if (uiMgr) uiMgr->AddChatMessage(message);
 		};
 
-	networkClient.onOtherLogin = [](short playerId, const std::string& name) {
+	networkClient.onOtherLogin = [](short playerId, const std::string& name, float x, float z) {
 		Player* target = nullptr;
 		for (auto* other : otherPlayer) {
 			if (other && other->playerID == playerId) {
@@ -760,6 +759,7 @@ void SetLambdaFunctions()
 			}
 		}
 		if (!target) return;
+		target->SetPosition(glm::vec3(x, target->getPosition().y, z));
 		target->SetPlayerID(playerId);
 		target->playerName = name;
 		if (uiMgr) uiMgr->AddChatMessage("[Login] " + name + " (ID " +

@@ -73,6 +73,8 @@ struct S2C_LoginResult {	//S2C_LOGINRESULT
 	unsigned char size;
 	PACKET_TYPE   type;
 	short player_id;		// 플레이어 ID
+	float x;
+	float z;
 };
 
 struct S2C_OtherLogin {	//S2C_OTHERLOGIN
@@ -80,6 +82,8 @@ struct S2C_OtherLogin {	//S2C_OTHERLOGIN
 	PACKET_TYPE   type;
 	short player_id;		// 플레이어 ID
 	char name[10];	// 플레이어 이름
+	float x;
+	float z;
 };
 
 struct S2C_Chat {	//S2C_CHAT

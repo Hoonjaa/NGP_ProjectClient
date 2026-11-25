@@ -366,7 +366,7 @@ void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t
         return;
     }
     localPlayerId = result.player_id;
-    if (onLoginResult) onLoginResult(localPlayerId);
+    if (onLoginResult) onLoginResult(localPlayerId, result.x, result.z);
 }
 
 void NetworkClient::S2C_RecvOtherLogin(const unsigned char* packet, std::size_t packetSize)
@@ -383,7 +383,7 @@ void NetworkClient::S2C_RecvOtherLogin(const unsigned char* packet, std::size_t 
     }
     const char* begin = other.name;
     const char* end = std::find(begin, begin + sizeof(other.name), '\0');
-    if (onOtherLogin) onOtherLogin(other.player_id, std::string(begin, end));
+    if (onOtherLogin) onOtherLogin(other.player_id, std::string(begin, end), other.x, other.z);
 }
 
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)

@@ -69,8 +69,8 @@ public:
     bool C2S_SendForwardInfo(float pitch, float yaw);
 
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
-    std::function<void(short)> onLoginResult;
-    std::function<void(short, const std::string&)> onOtherLogin;
+    std::function<void(short, float, float)> onLoginResult;
+    std::function<void(short, const std::string&, float, float)> onOtherLogin;
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
 	std::function<void(short, const float pitch, const float yaw)> onOtherForwardReceived;
