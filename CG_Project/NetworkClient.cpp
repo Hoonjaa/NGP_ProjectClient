@@ -300,7 +300,7 @@ bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
     return true;
 }
 
-bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
+bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId, bool w, bool a, bool s, bool d)
 {
     if (!IsLoggedIn()) {
         lastError = WSAENOTCONN;
@@ -314,8 +314,10 @@ bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
     packet.size = static_cast<unsigned char>(sizeof(packet));
     packet.type = C2S_MOVEINFO;
     packet.player_id = localPlayerId;
-    packet.x = Pos.x;
-    packet.z = Pos.z;
+    packet.w = w ? 1 : 0;
+    packet.a = a ? 1 : 0;
+    packet.s = s ? 1 : 0;
+    packet.d = d ? 1 : 0;
     std::vector<unsigned char> responsepacket(sizeof(packet));
     std::memcpy(responsepacket.data(), &packet, sizeof(packet));
     outgoing.push(responsepacket);
