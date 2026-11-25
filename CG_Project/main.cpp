@@ -640,8 +640,8 @@ GLvoid Logic(double deltaTime)
 	//플레이어
 	if (player&& player->isAlive ) {
 		if (!uiMgr || !uiMgr->IsChatting() && player->isAlive) {
-			player->processMovement(key_w, key_a, key_s, key_d);
-			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
+			// player->processMovement(key_w, key_a, key_s, key_d);
+			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID, key_w, key_a, key_s, key_d);
 			if (player->isFirstPersonMode()) {
 				const glm::vec3 dir = player->getFireDirection();
 				const float pitch = std::atan2(dir.y, std::hypot(dir.x, dir.z));

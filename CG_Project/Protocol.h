@@ -37,8 +37,10 @@ struct C2S_MoveInfo {	//C2S_MOVEINFO
 	unsigned char size;
 	PACKET_TYPE   type;
 	short player_id; // 플레이어 ID
-	float x;		// 플레이어 위치 X
-	float z;		// 플레이어 위치 Z
+	unsigned char w;
+	unsigned char a;
+	unsigned char s;
+	unsigned char d;
 };
 
 struct C2S_ShootInfo {	//C2S_SHOOTINFO
