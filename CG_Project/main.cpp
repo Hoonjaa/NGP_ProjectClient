@@ -291,27 +291,32 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 projection = glm::perspective(glm::radians(70.0f), 1.0f, 0.1f, 100.0f);
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 	
-	unsigned int hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
+	GLint hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
+	GLint isInvincibleLocation = glGetUniformLocation(shaderProgramID, "isInvincible");
 	
 	if (player && player->isAlive) {
-		if (player->hit_time <= 0)
-			glUniform1f(hitTimeLocation, false);
-		else
-			glUniform1f(hitTimeLocation, true);
+		glUniform1i(hitTimeLocation, player->hit_time > 0.0f);
+		glUniform1i(isInvincibleLocation, player->invincible);
 
 		player->render(viewProjectionMatrix);
 
-		glUniform1f(hitTimeLocation, false);
+		glUniform1i(hitTimeLocation, 0);
+		glUniform1i(isInvincibleLocation, 0);
 	}
 
 	for (auto* other : otherPlayer) {
 		if (other && other->isAlive) {
-			if (other->hit_time <= 0)
-				glUniform1f(hitTimeLocation, false);
+			glUniform1i(hitTimeLocation, other->hit_time > 0.0f);
+			glUniform1i(isInvincibleLocation, other->invincible);
+
+			if (other->invincible)
+				glUniform1f(isInvincibleLocation, true);
 			else
-				glUniform1f(hitTimeLocation, true);
+				glUniform1f(isInvincibleLocation, false);
+
 			if (other->playerID >= 0) other->render(viewProjectionMatrix);
-			glUniform1f(hitTimeLocation, false);
+			glUniform1i(hitTimeLocation, 0);
+			glUniform1i(isInvincibleLocation, 0);
 		}
 	}
 	
