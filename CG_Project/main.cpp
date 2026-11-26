@@ -106,7 +106,7 @@ char* filetobuf(const char* file)
 void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 {
 	//--- 윈도우 생성하기
-	serverAddress = argc > 1 ? argv[1] : "127.0.0.1";
+	serverAddress = argc > 1 ? argv[1] : "192.168.74.170";
 	for (;;) {
 		std::cout << "Player name (10글자 이내): " << std::flush;
 		if (!std::getline(std::cin, loginName)) return;
@@ -522,15 +522,19 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'w':
 		key_w = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'a':
 		key_a = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 's':
 		key_s = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'd':
 		key_d = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'r':
 		if (player /* && networkClient.IsLoggedIn()*/) {
@@ -547,15 +551,19 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'w':
 		key_w = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'a':
 		key_a = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 's':
 		key_s = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'd':
 		key_d = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	}
 	glutPostRedisplay();
@@ -641,7 +649,6 @@ GLvoid Logic(double deltaTime)
 	if (player&& player->isAlive ) {
 		if (!uiMgr || !uiMgr->IsChatting() && player->isAlive) {
 			// player->processMovement(key_w, key_a, key_s, key_d);
-			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID, key_w, key_a, key_s, key_d);
 			if (player->isFirstPersonMode()) {
 				const glm::vec3 dir = player->getFireDirection();
 				const float pitch = std::atan2(dir.y, std::hypot(dir.x, dir.z));

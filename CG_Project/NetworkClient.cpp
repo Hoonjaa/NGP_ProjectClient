@@ -102,27 +102,59 @@ void NetworkClient::Update()
 
 void NetworkClient::FlushSendQueue()
 {
-    if (outgoing.empty()) return;
+    //if (outgoing.empty()) return;
 
-    // One attempt per Update keeps rendering responsive even with a full queue.
-    const auto& packet = outgoing.front();
-    const int written = send(serverSocket,
-        reinterpret_cast<const char*>(packet.data()) + sendOffset,
-        static_cast<int>(packet.size() - sendOffset), 0);
-    if (written == SOCKET_ERROR) {
-        const int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK) Fail(error);
-        return;
-    }
-    if (written == 0) {
-        Fail(WSAECONNRESET);
-        return;
-    }
+    //// One attempt per Update keeps rendering responsive even with a full queue.
+    //const auto& packet = outgoing.front();
+    //const int written = send(serverSocket,
+    //    reinterpret_cast<const char*>(packet.data()) + sendOffset,
+    //    static_cast<int>(packet.size() - sendOffset), 0);
+    //if (written == SOCKET_ERROR) {
+    //    const int error = WSAGetLastError();
+    //    if (error != WSAEWOULDBLOCK) Fail(error);
+    //    return;
+    //}
+    //if (written == 0) {
+    //    Fail(WSAECONNRESET);
+    //    return;
+    //}
 
-    sendOffset += static_cast<std::size_t>(written);
-    if (sendOffset == packet.size()) {
-        outgoing.pop();
-        sendOffset = 0;
+    //sendOffset += static_cast<std::size_t>(written);
+    //if (sendOffset == packet.size()) {
+    //    outgoing.pop();
+    //    sendOffset = 0;
+    //}
+
+    constexpr int maxSendAttempts = 8;
+
+    for (int attempt = 0;
+        attempt < maxSendAttempts && !outgoing.empty();
+        ++attempt) {
+        const auto& packet = outgoing.front();
+        const int written = send(
+            serverSocket,
+            reinterpret_cast<const char*>(packet.data() + sendOffset),
+            static_cast<int>(packet.size() - sendOffset),
+            0);
+
+        if (written == SOCKET_ERROR) {
+            const int error = WSAGetLastError();
+            if (error != WSAEWOULDBLOCK) {
+                Fail(error);
+            }
+            return;
+        }
+
+        if (written == 0) {
+            Fail(WSAECONNRESET);
+            return;
+        }
+
+        sendOffset += static_cast<std::size_t>(written);
+        if (sendOffset == packet.size()) {
+            outgoing.pop();
+            sendOffset = 0;
+        }
     }
 }
 
@@ -300,7 +332,7 @@ bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
     return true;
 }
 
-bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId, bool w, bool a, bool s, bool d)
+bool NetworkClient::C2S_SendMoveInfo(short playerId, bool w, bool a, bool s, bool d)
 {
     if (!IsLoggedIn()) {
         lastError = WSAENOTCONN;
