@@ -69,7 +69,7 @@ private:
     GLfloat currentTime = 0.0f;
 
 public:
-    Bullet(const glm::vec3& startPos, const glm::vec3& dir);
+    Bullet(const glm::vec3& startPos, const glm::vec3& dir, const glm::vec3& Color);
     ~Bullet();
 
     GLvoid draw(const GLuint& ShaderID, const glm::mat4& worldMatrix, const glm::mat4& viewProjMatrix) override;

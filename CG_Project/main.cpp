@@ -76,7 +76,6 @@ Player* player = nullptr;
 Player* otherPlayer[2] = { nullptr }; // 다른 플레이어 객체
 Ground* ground = nullptr;
 Obstacle* obstacle = nullptr;
-std::vector<Bullet*> bullets;
 UIMgr* uiMgr = nullptr;
 NetworkClient networkClient;
 std::string serverAddress = "127.0.0.1";
@@ -106,12 +105,16 @@ char* filetobuf(const char* file)
 void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 {
 	//--- 윈도우 생성하기
-	serverAddress = argc > 1 ? argv[1] : "192.168.74.170";
+	serverAddress = argc > 1 ? argv[1] : "127.0.0.1";
 	for (;;) {
+		std::cout << "Server IP (10글자 이내): " << std::flush;
+		if (!std::getline(std::cin, serverAddress)) return;
+
 		std::cout << "Player name (10글자 이내): " << std::flush;
 		if (!std::getline(std::cin, loginName)) return;
 		if (NetworkClient::IsValidPlayerName(loginName)) break;
 		std::cout << "Invalid name. Enter 1-9 characters; a blank name is not allowed.\n";
+
 	}
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -322,11 +325,9 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
-	for (auto* bullet : bullets) {
-		if (bullet) {
-			bullet->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
-		}
-	}
+	player->drawBullet(shaderProgramID, viewProjectionMatrix);
+	//otherPlayer[0]->drawBullet(shaderProgramID, viewProjectionMatrix);
+	//otherPlayer[1]->drawBullet(shaderProgramID, viewProjectionMatrix);
 
 	// 디버그: 바운딩 박스 그리기
 	glUseProgram(0); // 셰이더 비활성화
@@ -444,8 +445,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			glm::vec3 fireDir = player->getFireDirection();
 
 			// 총알 생성
-			Bullet* newBullet = new Bullet(muzzlePos, player->getFireDirection());
-			bullets.push_back(newBullet);
+			player->addBullet(muzzlePos);
 
 			// 총알 수 감소
 			player->bulletCount--;
@@ -677,21 +677,9 @@ GLvoid Logic(double deltaTime)
 				other->hit_time -= deltaTime;
 			};
 		}
+		other->Swing();
 	}
 
-	// 총알 업데이트 및 충돌 체크
-	for (int i = bullets.size() - 1; i >= 0; i--) {
-		if (bullets[i]) {
-			bullets[i]->update();
-
-			// 생명주기가 끝난 총알 삭제
-			if (bullets[i]->Destroy()) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-				continue;
-			}
-		}
-	}
 	uiMgr->Update(deltaTime);
 	// 확인용 없애도 된다.
 	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
