@@ -75,6 +75,10 @@ public:
     GLvoid draw(const GLuint& ShaderID, const glm::mat4& worldMatrix, const glm::mat4& viewProjMatrix) override;
     GLvoid update() override;
     bool Destroy() const { return currentTime >= lifeTime; }
+    GLvoid SetPosition(const glm::vec3& pos) {
+        vPos = pos;
+        modelMatrix[3] = glm::vec4(pos, 1.0f);
+    }
     
     BoundingBox get_bb() const {
         BoundingBox bb;

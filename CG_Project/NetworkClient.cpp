@@ -227,6 +227,8 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
 	case S2C_OTHERFORWARD:          S2C_RecvForward(packet, packetSize);            break;
     case S2C_OTHERMOVE:             S2C_RecvPlayerMoveInfo(packet, packetSize);     break;
     case S2C_OTHERSHOOTINFO:        S2C_RecvOtherShootInfo(packet, packetSize);         break;
+    case S2C_BULLETMOVE:            S2C_RecvBulletMoveInfo(packet, packetSize);     break;
+    case S2C_BULLETDELETE:          S2C_RecvBulletDeleteInfo(packet, packetSize);   break;
     case S2C_OTHERRELOADING:        S2C_RecvOtherReloading(packet, packetSize);     break;
     case S2C_CANTMOVE:              S2C_RecvWrongWayInfo(packet, packetSize);       break;
     case S2C_GAMESTART:             S2C_GameStart(packet, packetSize);              break;
@@ -524,6 +526,29 @@ void NetworkClient::S2C_RecvOtherShootInfo(const unsigned char* packet, std::siz
     std::memcpy(&shootInfo, packet, sizeof(shootInfo));
     glm::vec3 pos = { shootInfo.x, shootInfo.y, shootInfo.z };
     if (IsLoggedIn() && onOtherShootInfoReceived) onOtherShootInfoReceived(shootInfo.player_id, pos);
+}
+
+void NetworkClient::S2C_RecvBulletMoveInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_BulletMove)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_BulletMove bulletInfo;
+    std::memcpy(&bulletInfo, packet, sizeof(bulletInfo));
+    glm::vec3 pos = { bulletInfo.x, bulletInfo.y, bulletInfo.z };
+    if (IsLoggedIn() && onBulletMoveInfoReceived) onBulletMoveInfoReceived(bulletInfo.player_id, bulletInfo.index, pos);
+}
+
+void NetworkClient::S2C_RecvBulletDeleteInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_BulletDelete)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_BulletDelete bulletInfo;
+    std::memcpy(&bulletInfo, packet, sizeof(bulletInfo));
+    if (IsLoggedIn() && onBulletDeleteInfoReceived) onBulletDeleteInfoReceived(bulletInfo.player_id, bulletInfo.index);
 }
 
 void NetworkClient::S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize)

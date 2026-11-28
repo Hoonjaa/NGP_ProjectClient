@@ -161,6 +161,23 @@ struct S2C_OtherShootInfo {	//S2C_OTHERSHOOTINFO
 	float z;
 };
 
+struct S2C_BulletMove {
+	unsigned char size;
+	PACKET_TYPE   type;
+	short player_id;
+	unsigned int index;
+	float x;
+	float y;
+	float z;
+};
+
+struct S2C_BulletDelete {
+	unsigned char size;
+	PACKET_TYPE   type;
+	short player_id;
+	unsigned int index;
+};
+
 struct S2C_OtherReloading {	//S2C_OTHERRELOADING
 	unsigned char size;
 	PACKET_TYPE   type;

@@ -445,11 +445,10 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			glm::vec3 fireDir = player->getFireDirection();
 
 			// ÃÑ¾Ë »ý¼º
-			player->addBullet(muzzlePos, glm::vec3(0.0f, 0.8f, 0.0f));
-			networkClient.C2S_SendShootInfo(muzzlePos, fireDir, player->playerID);
-
-			// ÃÑ¾Ë ¼ö °¨¼Ò
-			player->bulletCount--;
+			if (networkClient.C2S_SendShootInfo(muzzlePos, fireDir, player->playerID)) {
+				player->addBullet(muzzlePos, glm::vec3(0.0f, 0.8f, 0.0f));
+				--player->bulletCount;
+			}
 
 			std::cout << "ÃÑ¾Ë ¹ß»ç! ³²Àº ÃÑ¾Ë: " << player->bulletCount << std::endl;
 		}
@@ -899,5 +898,54 @@ void SetLambdaFunctions()
 				return;
 			}
 		}
+	};
+
+	networkClient.onBulletMoveInfoReceived = [](short playerId, const unsigned int index, const glm::vec3 pos) {
+		Player* owner = nullptr;
+
+		if (player && player->playerID == playerId) {
+			owner = player;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					owner = other;
+					break;
+				}
+			}
+		}
+
+		if (!owner || index >= owner->bullets.size()) {
+			return;
+		}
+
+		if (Bullet* bullet = owner->bullets[index]) {
+			bullet->SetPosition(pos);
+		}
+	};
+
+	networkClient.onBulletDeleteInfoReceived = [](short playerId, const unsigned int index) {
+		Player* owner = nullptr;
+
+		if (player && player->playerID == playerId) {
+			owner = player;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					owner = other;
+					break;
+				}
+			}
+		}
+
+		if (!owner || index >= owner->bullets.size()) {
+			return;
+		}
+
+		auto& bullets = owner->bullets;
+		auto it = bullets.begin() + index;
+		delete* it;
+		bullets.erase(it);
 	};
 }
