@@ -386,6 +386,33 @@ bool NetworkClient::C2S_SendForwardInfo(float pitch, float yaw)
     lastError = 0;
 	return true;
 }
+
+bool NetworkClient::C2S_SendShootInfo(const glm::vec3 position, const glm::vec3 dir, short playerId)
+{
+    if (!IsLoggedIn()) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+    if (playerId >= 0 && playerId != localPlayerId) {
+        lastError = WSAEINVAL;
+        return false;
+    }
+    C2S_ShootInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_SHOOTINFO;
+    packet.player_id = localPlayerId;
+    packet.x = position.x;
+    packet.y = position.y;
+    packet.z = position.z;
+    packet.dx = dir.x;
+    packet.dy = dir.y;
+    packet.dz = dir.z;
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+    outgoing.push(responsepacket);
+    lastError = 0;
+    return true;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize)
 {

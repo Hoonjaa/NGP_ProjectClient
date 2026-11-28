@@ -446,13 +446,12 @@ GLvoid Mouse(int button, int state, int x, int y) {
 
 			// ÃÑ¾Ë »ý¼º
 			player->addBullet(muzzlePos);
+			networkClient.C2S_SendShootInfo(muzzlePos, fireDir, player->playerID);
 
 			// ÃÑ¾Ë ¼ö °¨¼Ò
 			player->bulletCount--;
 
 			std::cout << "ÃÑ¾Ë ¹ß»ç! ³²Àº ÃÑ¾Ë: " << player->bulletCount << std::endl;
-			
-			
 		}
 	}
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {

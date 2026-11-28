@@ -48,7 +48,11 @@ struct C2S_ShootInfo {	//C2S_SHOOTINFO
 	PACKET_TYPE   type;
 	short player_id;
 	float x;		// 발사 위치 X
+	float y;		// 발사 위치 Y
 	float z;		// 발사 위치 Z
+	float dx;		// 발사 방향 X
+	float dy;		// 발사 방향 Y
+	float dz;		// 발사 방향 Z
 };
 
 struct C2S_ChatInfo {	//C2S_CHATINFO
