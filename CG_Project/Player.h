@@ -37,7 +37,7 @@ private:
 
 public: // 클라에만 있는 변수
 	float hit_time = 0.0f; // 플레이어가 맞은 시간
-	bool invincible = true; // 무적 상태 여부
+	bool invincible = false; // 무적 상태 여부
 	int cnt_death = 0, cnt_kill = 0;
 public: // 서버에도 있는 변수
 	// 총알 관련 변수

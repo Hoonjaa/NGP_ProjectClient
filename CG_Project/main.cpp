@@ -850,7 +850,7 @@ void SetLambdaFunctions()
 			player->invincible = true;
 			player->canFire = true;
 			player->hit_time = 0.0f;
-			player->HP = 100;
+			player->HP = 200;
 			player->SetPosition(glm::vec3(x, player->getPosition().y, z));
 		}
 		else {
