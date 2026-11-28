@@ -321,9 +321,10 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
-	player->drawBullet(shaderProgramID, viewProjectionMatrix);
-	otherPlayer[0]->drawBullet(shaderProgramID, viewProjectionMatrix);
-	otherPlayer[1]->drawBullet(shaderProgramID, viewProjectionMatrix);
+	if (player) player->drawBullet(shaderProgramID, viewProjectionMatrix);
+	for (auto* other : otherPlayer) {
+		if (other) other->drawBullet(shaderProgramID, viewProjectionMatrix);
+	}
 
 	// 디버그: 바운딩 박스 그리기
 	glUseProgram(0); // 셰이더 비활성화
@@ -663,7 +664,8 @@ GLvoid Logic(double deltaTime)
 		};
 	}
 	for (auto* other : otherPlayer) {
-		if (other && other->isAlive &&other->hit_time > 0.0f) {
+		if (!other) continue;
+		if (other->isAlive && other->hit_time > 0.0f) {
 			if (other->hit_time < deltaTime) {
 				other->hit_time = 0.0f;
 			}

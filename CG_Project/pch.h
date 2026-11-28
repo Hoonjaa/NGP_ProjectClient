@@ -19,7 +19,6 @@
 #include <cmath>
 #include <queue>
 #include <array>
-#include <memory>
 #include "include/GL/glew.h"
 #include "include/GL/freeglut.h"
 #include "include/GL/freeglut_ext.h"

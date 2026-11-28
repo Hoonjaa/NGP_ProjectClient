@@ -27,7 +27,7 @@ enum PACKET_TYPE {
 	S2C_CANTMOVE,
 	S2C_GAMESTART,
 	S2C_GAMEEND,
-	S2C_OTHERLOGOUT = 23
+	S2C_OTHERLOGOUT
 };
 #pragma pack(push, 1) 
 struct C2S_Login {	//C2S_LOGIN
