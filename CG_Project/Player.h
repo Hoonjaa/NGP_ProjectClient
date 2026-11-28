@@ -48,8 +48,8 @@ public: // 서버에도 있는 변수
 			bullet->draw(ShaderID, glm::mat4(1.0f), viewProjMatrix);
 		}
 	}
-	void addBullet(glm::vec3 Pos) { 
-		Bullet *b = new Bullet(Pos, getFireDirection(), glm::vec3(1.0f, 0.3f, 0.0f));
+	void addBullet(glm::vec3 Pos, glm::vec3 Color) { 
+		Bullet *b = new Bullet(Pos, getFireDirection(), Color);
 		bullets.push_back(b);
 	}
 

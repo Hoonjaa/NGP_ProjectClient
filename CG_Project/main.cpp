@@ -326,8 +326,8 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
 	player->drawBullet(shaderProgramID, viewProjectionMatrix);
-	//otherPlayer[0]->drawBullet(shaderProgramID, viewProjectionMatrix);
-	//otherPlayer[1]->drawBullet(shaderProgramID, viewProjectionMatrix);
+	otherPlayer[0]->drawBullet(shaderProgramID, viewProjectionMatrix);
+	otherPlayer[1]->drawBullet(shaderProgramID, viewProjectionMatrix);
 
 	// 디버그: 바운딩 박스 그리기
 	glUseProgram(0); // 셰이더 비활성화
@@ -445,7 +445,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			glm::vec3 fireDir = player->getFireDirection();
 
 			// 총알 생성
-			player->addBullet(muzzlePos);
+			player->addBullet(muzzlePos, glm::vec3(0.0f, 0.8f, 0.0f));
 			networkClient.C2S_SendShootInfo(muzzlePos, fireDir, player->playerID);
 
 			// 총알 수 감소
@@ -887,6 +887,15 @@ void SetLambdaFunctions()
 		for (auto* other : otherPlayer) {
 			if (other && other->playerID == playerId) {
 				other->setForwardDirection(pitch, yaw);
+				return;
+			}
+		}
+	};
+
+	networkClient.onOtherShootInfoReceived = [](short playerId, const glm::vec3 pos) {
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				other->addBullet(pos, glm::vec3(1.0f, 0.0f, 0.0f));
 				return;
 			}
 		}

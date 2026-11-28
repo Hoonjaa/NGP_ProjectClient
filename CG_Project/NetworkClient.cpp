@@ -226,7 +226,7 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
 	case S2C_RELEASEINVINCIBILITY:  S2C_ReleaseInvincibilityInfo(packet, packetSize);    break;
 	case S2C_OTHERFORWARD:          S2C_RecvForward(packet, packetSize);            break;
     case S2C_OTHERMOVE:             S2C_RecvPlayerMoveInfo(packet, packetSize);     break;
-    case S2C_OTHERBULLET:           S2C_RecvBulletInfo(packet, packetSize);         break;
+    case S2C_OTHERSHOOTINFO:        S2C_RecvOtherShootInfo(packet, packetSize);         break;
     case S2C_OTHERRELOADING:        S2C_RecvOtherReloading(packet, packetSize);     break;
     case S2C_CANTMOVE:              S2C_RecvWrongWayInfo(packet, packetSize);       break;
     case S2C_GAMESTART:             S2C_GameStart(packet, packetSize);              break;
@@ -514,8 +514,16 @@ void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t pac
 
 
 //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
-void NetworkClient::S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize)
+void NetworkClient::S2C_RecvOtherShootInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    if (packetSize != sizeof(S2C_OtherShootInfo)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_OtherShootInfo shootInfo;
+    std::memcpy(&shootInfo, packet, sizeof(shootInfo));
+    glm::vec3 pos = { shootInfo.x, shootInfo.y, shootInfo.z };
+    if (IsLoggedIn() && onOtherShootInfoReceived) onOtherShootInfoReceived(shootInfo.player_id, pos);
 }
 
 void NetworkClient::S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize)

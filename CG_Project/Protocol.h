@@ -20,7 +20,9 @@ enum PACKET_TYPE {
 	S2C_RELEASEINVINCIBILITY,
 	S2C_OTHERFORWARD,
 	S2C_OTHERMOVE,
-	S2C_OTHERBULLET,
+	S2C_OTHERSHOOTINFO,
+	S2C_BULLETMOVE,
+	S2C_BULLETDELETE,
 	S2C_OTHERRELOADING,
 	S2C_CANTMOVE,
 	S2C_GAMESTART,
@@ -150,9 +152,13 @@ struct S2C_OtherMove {		//S2C_OTHERMOVE
 	float z;				// 플레이어 위치 Z
 };
 
-struct S2C_OtherBullet {	//S2C_OTHERBULLET
+struct S2C_OtherShootInfo {	//S2C_OTHERSHOOTINFO
 	unsigned char size;
 	PACKET_TYPE   type;
+	short player_id;
+	float x;
+	float y;
+	float z;
 };
 
 struct S2C_OtherReloading {	//S2C_OTHERRELOADING
