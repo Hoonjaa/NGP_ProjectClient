@@ -10,6 +10,7 @@
 #include "Gun_handle.h"
 #include "Gun_magazine.h"
 #include "Player_body_producer.h"
+#include "Bullet.h"
 
 #define MAX_PLAYER_HP 200
 
@@ -36,11 +37,22 @@ private:
 
 public: // 클라에만 있는 변수
 	float hit_time = 0.0f; // 플레이어가 맞은 시간
-	bool invincible = true; // 무적 상태 여부
+	bool invincible = false; // 무적 상태 여부
 	int cnt_death = 0, cnt_kill = 0;
 public: // 서버에도 있는 변수
 	// 총알 관련 변수
-	
+	std::vector<Bullet*> bullets;
+	void drawBullet(const GLuint& ShaderID, const glm::mat4& viewProjMatrix)
+	{
+		for (auto bullet : bullets) {
+			bullet->draw(ShaderID, glm::mat4(1.0f), viewProjMatrix);
+		}
+	}
+	void addBullet(glm::vec3 Pos, glm::vec3 Color) { 
+		Bullet *b = new Bullet(Pos, getFireDirection(), Color);
+		bullets.push_back(b);
+	}
+
 	GLint bulletCount = 30;
 	bool isAlive = true; // 렌더링 여부
 	bool canFire = true;

@@ -1,10 +1,10 @@
 #include "Bullet.h"
 
-Bullet::Bullet(const glm::vec3& startPos, const glm::vec3& dir)
+Bullet::Bullet(const glm::vec3& startPos, const glm::vec3& dir, const glm::vec3& Color)
 {
 	vPos = startPos;
 	direction = glm::normalize(dir);
-	vColor = glm::vec3(1.0f, 0.3f, 0.0f);
+	vColor = Color;
 	
 	// modelMatrix를 시작 위치로 초기화
 	modelMatrix = glm::translate(glm::mat4(1.0f), startPos);

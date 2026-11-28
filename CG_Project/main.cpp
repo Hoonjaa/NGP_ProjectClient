@@ -76,7 +76,6 @@ Player* player = nullptr;
 Player* otherPlayer[2] = { nullptr }; // 다른 플레이어 객체
 Ground* ground = nullptr;
 Obstacle* obstacle = nullptr;
-std::vector<Bullet*> bullets;
 UIMgr* uiMgr = nullptr;
 NetworkClient networkClient;
 std::string serverAddress = "127.0.0.1";
@@ -108,10 +107,14 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	//--- 윈도우 생성하기
 	serverAddress = argc > 1 ? argv[1] : "127.0.0.1";
 	for (;;) {
+		std::cout << "Server IP (10글자 이내): " << std::flush;
+		if (!std::getline(std::cin, serverAddress)) return;
+
 		std::cout << "Player name (10글자 이내): " << std::flush;
 		if (!std::getline(std::cin, loginName)) return;
 		if (NetworkClient::IsValidPlayerName(loginName)) break;
 		std::cout << "Invalid name. Enter 1-9 characters; a blank name is not allowed.\n";
+
 	}
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -285,27 +288,32 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	glm::mat4 projection = glm::perspective(glm::radians(70.0f), 1.0f, 0.1f, 100.0f);
 	glm::mat4 viewProjectionMatrix = projection * viewMatrix;
 	
-	unsigned int hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
+	GLint hitTimeLocation = glGetUniformLocation(shaderProgramID, "hitTime");
+	GLint isInvincibleLocation = glGetUniformLocation(shaderProgramID, "isInvincible");
 	
 	if (player && player->isAlive) {
-		if (player->hit_time <= 0)
-			glUniform1f(hitTimeLocation, false);
-		else
-			glUniform1f(hitTimeLocation, true);
+		glUniform1i(hitTimeLocation, player->hit_time > 0.0f);
+		glUniform1i(isInvincibleLocation, player->invincible);
 
 		player->render(viewProjectionMatrix);
 
-		glUniform1f(hitTimeLocation, false);
+		glUniform1i(hitTimeLocation, 0);
+		glUniform1i(isInvincibleLocation, 0);
 	}
 
 	for (auto* other : otherPlayer) {
 		if (other && other->isAlive) {
-			if (other->hit_time <= 0)
-				glUniform1f(hitTimeLocation, false);
+			glUniform1i(hitTimeLocation, other->hit_time > 0.0f);
+			glUniform1i(isInvincibleLocation, other->invincible);
+
+			if (other->invincible)
+				glUniform1f(isInvincibleLocation, true);
 			else
-				glUniform1f(hitTimeLocation, true);
+				glUniform1f(isInvincibleLocation, false);
+
 			if (other->playerID >= 0) other->render(viewProjectionMatrix);
-			glUniform1f(hitTimeLocation, false);
+			glUniform1i(hitTimeLocation, 0);
+			glUniform1i(isInvincibleLocation, 0);
 		}
 	}
 	
@@ -313,11 +321,9 @@ GLvoid drawScene()														//--- 콜백 함수: 그리기 콜백 함수
 	ground->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 	obstacle->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
 
-	for (auto* bullet : bullets) {
-		if (bullet) {
-			bullet->draw(shaderProgramID, glm::mat4(1.0f), viewProjectionMatrix);
-		}
-	}
+	player->drawBullet(shaderProgramID, viewProjectionMatrix);
+	otherPlayer[0]->drawBullet(shaderProgramID, viewProjectionMatrix);
+	otherPlayer[1]->drawBullet(shaderProgramID, viewProjectionMatrix);
 
 	// 디버그: 바운딩 박스 그리기
 	glUseProgram(0); // 셰이더 비활성화
@@ -435,15 +441,12 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			glm::vec3 fireDir = player->getFireDirection();
 
 			// 총알 생성
-			Bullet* newBullet = new Bullet(muzzlePos, player->getFireDirection());
-			bullets.push_back(newBullet);
-
-			// 총알 수 감소
-			player->bulletCount--;
+			if (networkClient.C2S_SendShootInfo(muzzlePos, fireDir, player->playerID)) {
+				player->addBullet(muzzlePos, glm::vec3(0.0f, 0.8f, 0.0f));
+				--player->bulletCount;
+			}
 
 			std::cout << "총알 발사! 남은 총알: " << player->bulletCount << std::endl;
-			
-			
 		}
 	}
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
@@ -513,15 +516,19 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'w':
 		key_w = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'a':
 		key_a = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 's':
 		key_s = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'd':
 		key_d = true;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'r':
 		if (player /* && networkClient.IsLoggedIn()*/) {
@@ -538,15 +545,19 @@ GLvoid KeyboardUp(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'w':
 		key_w = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'a':
 		key_a = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 's':
 		key_s = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	case 'd':
 		key_d = false;
+		networkClient.C2S_SendMoveInfo(player->playerID, key_w, key_a, key_s, key_d);
 		break;
 	}
 	glutPostRedisplay();
@@ -631,8 +642,7 @@ GLvoid Logic(double deltaTime)
 	//플레이어
 	if (player&& player->isAlive ) {
 		if (!uiMgr || !uiMgr->IsChatting() && player->isAlive) {
-			player->processMovement(key_w, key_a, key_s, key_d);
-			networkClient.C2S_SendMoveInfo(player->getPosition(), player->playerID);
+			// player->processMovement(key_w, key_a, key_s, key_d);
 			if (player->isFirstPersonMode()) {
 				const glm::vec3 dir = player->getFireDirection();
 				const float pitch = std::atan2(dir.y, std::hypot(dir.x, dir.z));
@@ -661,21 +671,9 @@ GLvoid Logic(double deltaTime)
 				other->hit_time -= deltaTime;
 			};
 		}
+		other->Swing();
 	}
 
-	// 총알 업데이트 및 충돌 체크
-	for (int i = bullets.size() - 1; i >= 0; i--) {
-		if (bullets[i]) {
-			bullets[i]->update();
-
-			// 생명주기가 끝난 총알 삭제
-			if (bullets[i]->Destroy()) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-				continue;
-			}
-		}
-	}
 	uiMgr->Update(deltaTime);
 	// 확인용 없애도 된다.
 	std::cout << "Logic TPS: " << logicTimer->GetTPS() << std::endl;
@@ -859,7 +857,7 @@ void SetLambdaFunctions()
 			player->invincible = true;
 			player->canFire = true;
 			player->hit_time = 0.0f;
-			player->HP = 100;
+			player->HP = 200;
 			player->SetPosition(glm::vec3(x, player->getPosition().y, z));
 		}
 		else {
@@ -898,5 +896,63 @@ void SetLambdaFunctions()
 				return;
 			}
 		}
+	};
+
+	networkClient.onOtherShootInfoReceived = [](short playerId, const glm::vec3 pos) {
+		for (auto* other : otherPlayer) {
+			if (other && other->playerID == playerId) {
+				other->addBullet(pos, glm::vec3(1.0f, 0.0f, 0.0f));
+				return;
+			}
+		}
+	};
+
+	networkClient.onBulletMoveInfoReceived = [](short playerId, const unsigned int index, const glm::vec3 pos) {
+		Player* owner = nullptr;
+
+		if (player && player->playerID == playerId) {
+			owner = player;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					owner = other;
+					break;
+				}
+			}
+		}
+
+		if (!owner || index >= owner->bullets.size()) {
+			return;
+		}
+
+		if (Bullet* bullet = owner->bullets[index]) {
+			bullet->SetPosition(pos);
+		}
+	};
+
+	networkClient.onBulletDeleteInfoReceived = [](short playerId, const unsigned int index) {
+		Player* owner = nullptr;
+
+		if (player && player->playerID == playerId) {
+			owner = player;
+		}
+		else {
+			for (auto* other : otherPlayer) {
+				if (other && other->playerID == playerId) {
+					owner = other;
+					break;
+				}
+			}
+		}
+
+		if (!owner || index >= owner->bullets.size()) {
+			return;
+		}
+
+		auto& bullets = owner->bullets;
+		auto it = bullets.begin() + index;
+		delete* it;
+		bullets.erase(it);
 	};
 }

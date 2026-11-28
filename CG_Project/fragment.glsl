@@ -12,6 +12,7 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 
 uniform bool hitTime;
+uniform bool isInvincible;
 
 void main()
 {
@@ -32,7 +33,10 @@ void main()
 
 
 	vec3 result = (ambient + diffuse + specular) * frag_col;
-	if (hitTime){
+	if (isInvincible){
+		result += vec3(1.7f, 1.7f, 0.0f);
+	}
+	else if (hitTime){
 		result += vec3(1.7f, 0.0f, 0.0f);
 	}
 

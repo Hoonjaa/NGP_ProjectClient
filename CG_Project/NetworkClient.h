@@ -65,8 +65,9 @@ public:
     // true means queued; gameplay requires a successful login response.
     bool C2S_SendLoginInfo(const std::string& name);
     bool C2S_SendChatInfo(const std::string& message, short playerId = -1);
-    bool C2S_SendMoveInfo(glm::vec3 Pos, short playerId = -1);
+    bool C2S_SendMoveInfo(short playerId, bool w, bool a, bool s, bool d);
     bool C2S_SendForwardInfo(float pitch, float yaw);
+    bool C2S_SendShootInfo(const glm::vec3 position, const glm::vec3 dir, short playerId = -1);
 
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
     std::function<void(short, float, float)> onLoginResult;
@@ -79,6 +80,9 @@ public:
 	std::function<void(short, short)> onDeathInfo;
 	std::function<void(short, const float, const float)> onRespawnInfo;
 	std::function<void(short)> onInvincibilityReleaseInfo;
+    std::function<void(short, const glm::vec3 pos)> onOtherShootInfoReceived;
+    std::function<void(short, const unsigned int, const glm::vec3)> onBulletMoveInfoReceived;
+    std::function<void(short, const unsigned int)> onBulletDeleteInfoReceived;
 
     std::queue<std::vector<unsigned char>> outgoing;
 private:
@@ -89,7 +93,9 @@ private:
     void S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize); //피격 당한 플레이어가 HP정보를 받는 함수
     void S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize); //잘못된 이동에 대한 정보를 받는 함수
     void S2C_RecvPlayerMoveInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들의 움직임 정보 받는 함수
-    void S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
+    void S2C_RecvOtherShootInfo(const unsigned char* packet, std::size_t packetSize); //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
+    void S2C_RecvBulletMoveInfo(const unsigned char* packet, std::size_t packetSize);
+    void S2C_RecvBulletDeleteInfo(const unsigned char* packet, std::size_t packetSize);
         
 	void S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize); //죽음 정보 받는 함수
 	void S2C_RecvRespawnInfo(const unsigned char* packet, std::size_t packetSize); //부활 정보 받는 함수

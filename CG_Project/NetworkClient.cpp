@@ -102,27 +102,59 @@ void NetworkClient::Update()
 
 void NetworkClient::FlushSendQueue()
 {
-    if (outgoing.empty()) return;
+    //if (outgoing.empty()) return;
 
-    // One attempt per Update keeps rendering responsive even with a full queue.
-    const auto& packet = outgoing.front();
-    const int written = send(serverSocket,
-        reinterpret_cast<const char*>(packet.data()) + sendOffset,
-        static_cast<int>(packet.size() - sendOffset), 0);
-    if (written == SOCKET_ERROR) {
-        const int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK) Fail(error);
-        return;
-    }
-    if (written == 0) {
-        Fail(WSAECONNRESET);
-        return;
-    }
+    //// One attempt per Update keeps rendering responsive even with a full queue.
+    //const auto& packet = outgoing.front();
+    //const int written = send(serverSocket,
+    //    reinterpret_cast<const char*>(packet.data()) + sendOffset,
+    //    static_cast<int>(packet.size() - sendOffset), 0);
+    //if (written == SOCKET_ERROR) {
+    //    const int error = WSAGetLastError();
+    //    if (error != WSAEWOULDBLOCK) Fail(error);
+    //    return;
+    //}
+    //if (written == 0) {
+    //    Fail(WSAECONNRESET);
+    //    return;
+    //}
 
-    sendOffset += static_cast<std::size_t>(written);
-    if (sendOffset == packet.size()) {
-        outgoing.pop();
-        sendOffset = 0;
+    //sendOffset += static_cast<std::size_t>(written);
+    //if (sendOffset == packet.size()) {
+    //    outgoing.pop();
+    //    sendOffset = 0;
+    //}
+
+    constexpr int maxSendAttempts = 8;
+
+    for (int attempt = 0;
+        attempt < maxSendAttempts && !outgoing.empty();
+        ++attempt) {
+        const auto& packet = outgoing.front();
+        const int written = send(
+            serverSocket,
+            reinterpret_cast<const char*>(packet.data() + sendOffset),
+            static_cast<int>(packet.size() - sendOffset),
+            0);
+
+        if (written == SOCKET_ERROR) {
+            const int error = WSAGetLastError();
+            if (error != WSAEWOULDBLOCK) {
+                Fail(error);
+            }
+            return;
+        }
+
+        if (written == 0) {
+            Fail(WSAECONNRESET);
+            return;
+        }
+
+        sendOffset += static_cast<std::size_t>(written);
+        if (sendOffset == packet.size()) {
+            outgoing.pop();
+            sendOffset = 0;
+        }
     }
 }
 
@@ -195,7 +227,9 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
 	case S2C_RELEASEINVINCIBILITY:  S2C_ReleaseInvincibilityInfo(packet, packetSize);    break;
 	case S2C_OTHERFORWARD:          S2C_RecvForward(packet, packetSize);            break;
     case S2C_OTHERMOVE:             S2C_RecvPlayerMoveInfo(packet, packetSize);     break;
-    case S2C_OTHERBULLET:           S2C_RecvBulletInfo(packet, packetSize);         break;
+    case S2C_OTHERSHOOTINFO:        S2C_RecvOtherShootInfo(packet, packetSize);         break;
+    case S2C_BULLETMOVE:            S2C_RecvBulletMoveInfo(packet, packetSize);     break;
+    case S2C_BULLETDELETE:          S2C_RecvBulletDeleteInfo(packet, packetSize);   break;
     case S2C_OTHERRELOADING:        S2C_RecvOtherReloading(packet, packetSize);     break;
     case S2C_CANTMOVE:              S2C_RecvWrongWayInfo(packet, packetSize);       break;
     case S2C_GAMESTART:             S2C_GameStart(packet, packetSize);              break;
@@ -301,7 +335,7 @@ bool NetworkClient::C2S_SendChatInfo(const std::string& message, short playerId)
     return true;
 }
 
-bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
+bool NetworkClient::C2S_SendMoveInfo(short playerId, bool w, bool a, bool s, bool d)
 {
     if (!IsLoggedIn()) {
         lastError = WSAENOTCONN;
@@ -315,8 +349,10 @@ bool NetworkClient::C2S_SendMoveInfo(glm::vec3 Pos, short playerId)
     packet.size = static_cast<unsigned char>(sizeof(packet));
     packet.type = C2S_MOVEINFO;
     packet.player_id = localPlayerId;
-    packet.x = Pos.x;
-    packet.z = Pos.z;
+    packet.w = w ? 1 : 0;
+    packet.a = a ? 1 : 0;
+    packet.s = s ? 1 : 0;
+    packet.d = d ? 1 : 0;
     std::vector<unsigned char> responsepacket(sizeof(packet));
     std::memcpy(responsepacket.data(), &packet, sizeof(packet));
     outgoing.push(responsepacket);
@@ -352,6 +388,33 @@ bool NetworkClient::C2S_SendForwardInfo(float pitch, float yaw)
     lastQueuedYaw = yaw;
     lastError = 0;
 	return true;
+}
+
+bool NetworkClient::C2S_SendShootInfo(const glm::vec3 position, const glm::vec3 dir, short playerId)
+{
+    if (!IsLoggedIn()) {
+        lastError = WSAENOTCONN;
+        return false;
+    }
+    if (playerId >= 0 && playerId != localPlayerId) {
+        lastError = WSAEINVAL;
+        return false;
+    }
+    C2S_ShootInfo packet{};
+    packet.size = static_cast<unsigned char>(sizeof(packet));
+    packet.type = C2S_SHOOTINFO;
+    packet.player_id = localPlayerId;
+    packet.x = position.x;
+    packet.y = position.y;
+    packet.z = position.z;
+    packet.dx = dir.x;
+    packet.dy = dir.y;
+    packet.dz = dir.z;
+    std::vector<unsigned char> responsepacket(sizeof(packet));
+    std::memcpy(responsepacket.data(), &packet, sizeof(packet));
+    outgoing.push(responsepacket);
+    lastError = 0;
+    return true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void NetworkClient::S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize)
@@ -471,8 +534,39 @@ void NetworkClient::S2C_RecvForward(const unsigned char* packet, std::size_t pac
 
 
 //다른 클라이언트들이 총을 발사했다는 정보 받는 함수
-void NetworkClient::S2C_RecvBulletInfo(const unsigned char* packet, std::size_t packetSize)
+void NetworkClient::S2C_RecvOtherShootInfo(const unsigned char* packet, std::size_t packetSize)
 {
+    if (packetSize != sizeof(S2C_OtherShootInfo)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_OtherShootInfo shootInfo;
+    std::memcpy(&shootInfo, packet, sizeof(shootInfo));
+    glm::vec3 pos = { shootInfo.x, shootInfo.y, shootInfo.z };
+    if (IsLoggedIn() && onOtherShootInfoReceived) onOtherShootInfoReceived(shootInfo.player_id, pos);
+}
+
+void NetworkClient::S2C_RecvBulletMoveInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_BulletMove)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_BulletMove bulletInfo;
+    std::memcpy(&bulletInfo, packet, sizeof(bulletInfo));
+    glm::vec3 pos = { bulletInfo.x, bulletInfo.y, bulletInfo.z };
+    if (IsLoggedIn() && onBulletMoveInfoReceived) onBulletMoveInfoReceived(bulletInfo.player_id, bulletInfo.index, pos);
+}
+
+void NetworkClient::S2C_RecvBulletDeleteInfo(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_BulletDelete)) {
+        Fail(WSAEINVAL);
+        return;
+    }
+    S2C_BulletDelete bulletInfo;
+    std::memcpy(&bulletInfo, packet, sizeof(bulletInfo));
+    if (IsLoggedIn() && onBulletDeleteInfoReceived) onBulletDeleteInfoReceived(bulletInfo.player_id, bulletInfo.index);
 }
 
 void NetworkClient::S2C_RecvDeathInfo(const unsigned char* packet, std::size_t packetSize)
