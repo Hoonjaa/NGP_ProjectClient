@@ -24,7 +24,8 @@ enum PACKET_TYPE {
 	S2C_OTHERRELOADING,
 	S2C_CANTMOVE,
 	S2C_GAMESTART,
-	S2C_GAMEEND
+	S2C_GAMEEND,
+	S2C_OTHERLOGOUT = 23
 };
 #pragma pack(push, 1) 
 struct C2S_Login {	//C2S_LOGIN
@@ -84,6 +85,12 @@ struct S2C_OtherLogin {	//S2C_OTHERLOGIN
 	char name[10];	// 플레이어 이름
 	float x;
 	float z;
+};
+
+struct S2C_OtherLogout {
+	unsigned char size;
+	PACKET_TYPE type;
+	short player_id;
 };
 
 struct S2C_Chat {	//S2C_CHAT

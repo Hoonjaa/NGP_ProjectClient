@@ -71,6 +71,7 @@ public:
     // 리시브 함수들 다 람다로 해서 Main.cpp에서 정의하는데 이것도 어캐할지 생각해볼 필요는 있을 듯.
     std::function<void(short, float, float)> onLoginResult;
     std::function<void(short, const std::string&, float, float)> onOtherLogin;
+    std::function<void(short)> onOtherLogout;
     std::function<void(short, const std::string&)> onChatReceived;
     std::function<void(short, const float x, const float y)> onOtherMoveReceived;
 	std::function<void(short, const float pitch, const float yaw)> onOtherForwardReceived;
@@ -83,6 +84,7 @@ public:
 private:
     void S2C_RecvLoginResult(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvOtherLogin(const unsigned char* packet, std::size_t packetSize);
+    void S2C_RecvOtherLogout(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize);
     void S2C_RecvPlayerHPInfo(const unsigned char* packet, std::size_t packetSize); //피격 당한 플레이어가 HP정보를 받는 함수
     void S2C_RecvWrongWayInfo(const unsigned char* packet, std::size_t packetSize); //잘못된 이동에 대한 정보를 받는 함수

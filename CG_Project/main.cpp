@@ -140,10 +140,6 @@ void main(int argc, char** argv)										//--- 윈도우 출력하고 콜백함수 설정
 	player = new Player();
 	player->setup(shaderProgramID);
 	player->playerName = loginName;
-	otherPlayer[0] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
-	otherPlayer[0]->setup(shaderProgramID);
-	otherPlayer[1] = new Player(); // 임시로 만들었음. 이후에는 맵이나 array로 관리해야함.
-	otherPlayer[1]->setup(shaderProgramID);
 
 	ground = new Ground();
 	obstacle = new Obstacle();
@@ -703,8 +699,9 @@ GLvoid ReportNetworkStatus()
 		break;
 	case NetworkClient::State::Failed:
 		if (player) player->SetPlayerID(-1);
-		for (auto* other : otherPlayer) {
-			if (other) other->SetPlayerID(-1);
+		for (auto*& other : otherPlayer) {
+			delete other;
+			other = nullptr;
 		}
 		message = "[Network] Connection failed (Winsock " +
 			std::to_string(networkClient.GetLastError()) + "). Check the server IP and port.";
@@ -751,11 +748,12 @@ void SetLambdaFunctions()
 			}
 		}
 		if (!target) {
-			for (auto* other : otherPlayer) {
-				if (other && other->playerID < 0) {
-					target = other;
-					break;
-				}
+			for (auto*& other : otherPlayer) {
+				if (other) continue;
+				other = new Player();
+				other->setup(shaderProgramID);
+				target = other;
+				break;
 			}
 		}
 		if (!target) return;
@@ -765,6 +763,15 @@ void SetLambdaFunctions()
 		if (uiMgr) uiMgr->AddChatMessage("[Login] " + name + " (ID " +
 			std::to_string(playerId) + ") is connected.");
 		};
+
+	networkClient.onOtherLogout = [](short playerId) {
+		for (auto*& other : otherPlayer) {
+			if (!other || other->playerID != playerId) continue;
+			delete other;
+			other = nullptr;
+			return;
+		}
+	};
 
 	networkClient.onChatReceived = [](short playerId, const std::string& message) {
 		if (uiMgr) {

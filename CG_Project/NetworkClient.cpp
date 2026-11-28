@@ -186,6 +186,7 @@ void NetworkClient::DispatchPacket(const unsigned char* packet, std::size_t pack
     switch (type) {
     case S2C_LOGINRESULT:           S2C_RecvLoginResult(packet, packetSize);        break;
     case S2C_OTHERLOGIN:            S2C_RecvOtherLogin(packet, packetSize);         break;
+    case S2C_OTHERLOGOUT:           S2C_RecvOtherLogout(packet, packetSize);        break;
     case S2C_CHAT:                  S2C_RecvChatInfo(packet, packetSize);           break;
     case S2C_KILLLOG:               S2C_RecvKilllog(packet, packetSize);            break;
     case S2C_HITINFO:               S2C_RecvPlayerHPInfo(packet,packetSize);        break;
@@ -384,6 +385,23 @@ void NetworkClient::S2C_RecvOtherLogin(const unsigned char* packet, std::size_t 
     const char* begin = other.name;
     const char* end = std::find(begin, begin + sizeof(other.name), '\0');
     if (onOtherLogin) onOtherLogin(other.player_id, std::string(begin, end), other.x, other.z);
+}
+
+void NetworkClient::S2C_RecvOtherLogout(const unsigned char* packet, std::size_t packetSize)
+{
+    if (packetSize != sizeof(S2C_OtherLogout) || !IsLoggedIn()) {
+        Fail(WSAEINVAL);
+        return;
+    }
+
+    S2C_OtherLogout logout{};
+    std::memcpy(&logout, packet, sizeof(logout));
+    if (!vaildPlayerID(logout.player_id) || logout.player_id == localPlayerId) {
+        Fail(WSAEINVAL);
+        return;
+    }
+
+    if (onOtherLogout) onOtherLogout(logout.player_id);
 }
 
 void NetworkClient::S2C_RecvChatInfo(const unsigned char* packet, std::size_t packetSize)
